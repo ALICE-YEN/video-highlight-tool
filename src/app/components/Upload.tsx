@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 export default function UploadPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -13,7 +14,7 @@ export default function UploadPage() {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      alert("請選擇有效的影片文件");
+      toast.error("請選擇有效的影片文件");
       return;
     }
 
@@ -54,11 +55,10 @@ export default function UploadPage() {
 
       {!videoUrl ? (
         <div
-          className="w-8/12 min-w-72 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white cursor-pointer"
+          className="w-8/12 min-w-72 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={handleSelectFile}
         >
           <div className="flex flex-col items-center">
             <motion.div
@@ -67,7 +67,8 @@ export default function UploadPage() {
                 boxShadow: isDragging ? "0px 4px 10px rgba(0,0,0,0.2)" : "none",
               }}
               transition={{ duration: 0.2 }}
-              className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center"
+              className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer"
+              onClick={handleSelectFile}
             >
               <span className="text-6xl text-gray-400">⬆</span>
             </motion.div>
@@ -77,7 +78,7 @@ export default function UploadPage() {
             </p>
           </div>
           <button
-            className="mt-4 px-4 py-2 text-sm bg-black text-white rounded-full"
+            className="mt-6 px-4 py-2 text-sm bg-black text-white rounded-full cursor-pointer"
             onClick={handleSelectFile}
           >
             選取檔案
@@ -88,7 +89,7 @@ export default function UploadPage() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-96"
+          className="p-4 sm:p-16 max-w-[960px]"
         >
           {isLoading ? (
             <motion.div
@@ -98,7 +99,7 @@ export default function UploadPage() {
             ></motion.div>
           ) : (
             <>
-              <p className="mb-2 text-gray-600">影片預覽：</p>
+              <p className="mb-2 text-gray-700">影片預覽：</p>
               <video
                 src={videoUrl}
                 controls
