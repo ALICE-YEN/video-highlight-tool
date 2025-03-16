@@ -6,11 +6,12 @@ import { toast } from "react-toastify";
 
 export default function UploadPage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = (file: File | null) => {
+  const handleFileChange = async (file: File | null) => {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
@@ -24,7 +25,56 @@ export default function UploadPage() {
     const url = URL.createObjectURL(file);
     setVideoUrl(url);
 
+    try {
+      // 提取音訊
+      await extractAudio(file);
+    } catch (error) {
+      console.error(error);
+      alert("字幕轉錄失敗");
+    }
+
     setIsLoading(false);
+  };
+
+  const extractAudioAPI = async (videoFile: File): Promise<Blob> => {
+    try {
+      // 創建FormData對象
+      const formData = new FormData();
+      formData.append("video", videoFile);
+
+      // 發送請求到API Route
+      const response = await fetch("/api/extract-audio", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "提取音頻失敗");
+      }
+
+      // 返回音頻blob
+      return await response.blob();
+    } catch (error) {
+      console.error("API提取音頻錯誤:", error);
+      toast.error("API提取音頻錯誤");
+      throw error;
+    }
+  };
+
+  const extractAudio = async (file: File) => {
+    try {
+      const audioBlob = await extractAudioAPI(file);
+
+      // 創建URL並設置給audio元素
+      const audioUrl = URL.createObjectURL(audioBlob);
+      setAudioUrl(audioUrl);
+
+      // 繼續處理 (例如發送到Whisper API)
+    } catch (error) {
+      console.error(error);
+      toast.error("音頻提取失敗");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -108,6 +158,16 @@ export default function UploadPage() {
             </>
           )}
         </motion.div>
+      )}
+
+      {audioUrl && (
+        <div className="p-4 bg-gray-50 rounded-lg">
+          <p className="mb-2 text-gray-700 font-medium">提取的音訊：</p>
+          <audio src={audioUrl} controls className="w-full"></audio>
+          <p className="mt-2 text-xs text-gray-500">
+            音訊已轉換為 16kHz 單聲道 WAV 格式，適用於 Whisper AI 處理
+          </p>
+        </div>
       )}
 
       {/* 隱藏的 input */}
