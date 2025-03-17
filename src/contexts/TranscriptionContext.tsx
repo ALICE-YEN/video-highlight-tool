@@ -1,25 +1,19 @@
 "use client";
 
 import { createContext, useState, useContext, ReactNode } from "react";
-
-interface TranscriptSegment {
-  id: number;
-  start: number;
-  end: number;
-  text: string;
-}
+import { TranscriptSection } from "@/types/interfaces";
 
 interface TranscriptionContextType {
   videoFile: File | null;
   videoUrl: string | null;
   audioFile: File | null;
   audioUrl: string | null;
-  transcript: TranscriptSegment[];
+  transcript: TranscriptSection[];
   setVideoFile: (file: File) => void;
   setVideoUrl: (url: string) => void;
   setAudioFile: (file: File) => void;
   setAudioUrl: (url: string) => void;
-  setTranscript: (transcript: TranscriptSegment[]) => void;
+  setTranscript: (transcript: TranscriptSection[]) => void;
 }
 
 const TranscriptionContext = createContext<
@@ -35,7 +29,7 @@ export const TranscriptionProvider = ({
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [transcript, setTranscript] = useState<TranscriptSection[]>([]);
 
   return (
     <TranscriptionContext.Provider

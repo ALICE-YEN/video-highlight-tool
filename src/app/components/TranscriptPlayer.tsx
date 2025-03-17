@@ -3,12 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import { motion } from "framer-motion";
-import { IoClose, IoChevronBack } from "react-icons/io5"; // 引入 icon
+import { IoClose, IoChevronBack, IoStar, IoStarOutline } from "react-icons/io5"; // 引入 icon
+import { TranscriptSection } from "@/types/interfaces";
 
 export default function TranscriptPlayer() {
-  const { videoUrl, transcript } = useTranscription();
+  const { videoUrl, transcript, setTranscript } = useTranscription();
+
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // 控制字幕區開關
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -20,6 +23,47 @@ export default function TranscriptPlayer() {
 
     return () => video.removeEventListener("timeupdate", updateCurrentTime);
   }, []);
+
+  const toggleHighlight = (sectionIndex: number, segmentIndex: number) => {
+    setTranscript((prev) =>
+      prev.map((section, sIndex) =>
+        sIndex !== sectionIndex
+          ? section
+          : {
+              ...section,
+              segments: section.segments.map((segment) =>
+                segment.id !== segmentIndex
+                  ? segment
+                  : { ...segment, highlighted: !segment.highlighted }
+              ),
+            }
+      )
+    );
+  };
+
+  const handleEditText = (
+    sectionIndex: number,
+    segmentIndex: number,
+    newText: string
+  ) => {
+    setTranscript((prev: TranscriptSection[]) => {
+      return prev.map((section, sIndex) => {
+        if (sIndex !== sectionIndex) return section; // 其他 section 不變
+
+        return {
+          ...section,
+          segments: section.segments.map((segment) => {
+            if (segment.id !== segmentIndex) return segment; // 其他 segment 不變
+
+            return {
+              ...segment,
+              text: newText, // 產生新的物件，觸發 re-render
+            };
+          }),
+        };
+      });
+    });
+  };
 
   const handleSeek = (time: number) => {
     if (videoRef.current) {
@@ -67,29 +111,60 @@ export default function TranscriptPlayer() {
           </div>
 
           {/* 字幕內容 */}
-          {transcript.map((segment) => (
-            <motion.div
-              key={segment.id}
-              initial={{ opacity: 0.7 }}
-              animate={{
-                backgroundColor:
-                  currentTime >= segment.start && currentTime <= segment.end
-                    ? "#3B82F6"
-                    : "transparent",
-                color:
-                  currentTime >= segment.start && currentTime <= segment.end
-                    ? "white"
-                    : "black",
-              }}
-              whileHover={{ backgroundColor: "#E5E7EB" }}
-              className="p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-gray-200"
-              onClick={() => handleSeek(segment.start)}
-            >
-              <span className="text-gray-500 text-xs font-semibold">
-                {formatTime(segment.start)}
-              </span>
-              <span className="ml-2.5">{segment.text}</span>
-            </motion.div>
+          {transcript.map((section, sectionIndex) => (
+            <div key={sectionIndex} className="mb-6">
+              <h3 className="mb-2 text-lg font-semibold">{section.title}</h3>
+
+              {/* 顯示字幕列表 */}
+              {section.segments.map((segment) => (
+                <div
+                  key={segment.id}
+                  className={`flex items-center justify-between p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out ${
+                    currentTime >= segment.start && currentTime <= segment.end
+                      ? "bg-blue-400 text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleSeek(segment.start)}
+                >
+                  {/* 時間 */}
+                  <span className="text-gray-500 text-xs font-semibold">
+                    {formatTime(segment.start)}
+                  </span>
+
+                  {/* 可編輯字幕 */}
+                  <input
+                    type="text"
+                    value={segment.text}
+                    className="ml-2.5 w-full bg-transparent border-none focus:ring-0"
+                    onChange={(e) =>
+                      handleEditText(sectionIndex, segment.id, e.target.value)
+                    }
+                    onClick={(e) => e.stopPropagation()} // 避免點擊 input 時觸發 handleSeek
+                  />
+
+                  {/* Highlight 切換按鈕 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // 避免點擊星星時觸發 handleSeek
+                      toggleHighlight(sectionIndex, segment.id);
+                    }}
+                    className="ml-2 transition"
+                  >
+                    {segment.highlighted === false ? (
+                      <IoStarOutline
+                        size={20}
+                        className="text-gray-400 hover:text-gray-300"
+                      />
+                    ) : (
+                      <IoStar
+                        size={20}
+                        className="text-yellow-400 hover:text-yellow-300"
+                      />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
           ))}
         </motion.div>
       ) : (
