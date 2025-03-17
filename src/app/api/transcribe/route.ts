@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // ✅ 使用 OpenAI Whisper API 轉錄
+    // 使用 OpenAI Whisper API 轉錄
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
       model: "whisper-1",

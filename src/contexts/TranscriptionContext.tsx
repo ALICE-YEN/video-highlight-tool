@@ -14,24 +14,13 @@ interface TranscriptionContextType {
   videoUrl: string | null;
   audioFile: File | null;
   audioUrl: string | null;
-  transcript: TranscriptSegment[] | null;
-  setVideoFile: (file: File | null) => void;
-  setVideoUrl: (url: string | null) => void;
-  setAudioFile: (file: File | null) => void;
-  setAudioUrl: (url: string | null) => void;
-  setTranscript: (transcript: TranscriptSegment[] | null) => void;
+  transcript: TranscriptSegment[];
+  setVideoFile: (file: File) => void;
+  setVideoUrl: (url: string) => void;
+  setAudioFile: (file: File) => void;
+  setAudioUrl: (url: string) => void;
+  setTranscript: (transcript: TranscriptSegment[]) => void;
 }
-
-const transcriptData = [
-  { id: 0, start: 0, end: 2, text: "再來測試講話" },
-  { id: 1, start: 2, end: 4, text: "那這個講話多久會被記實" },
-  { id: 2, start: 4, end: 6, text: "也很好奇" },
-  { id: 3, start: 6, end: 8, text: "要用Whisper的API" },
-  { id: 4, start: 10, end: 12, text: "然後等一下要做的是一個影音" },
-  { id: 5, start: 12, end: 14, text: "可以自動上字幕" },
-  { id: 6, start: 14, end: 16, text: "然後有前段可以去做剪輯" },
-  { id: 7, start: 16, end: 18, text: "那不知道這個東西到底會花多少錢呢" },
-];
 
 const TranscriptionContext = createContext<
   TranscriptionContextType | undefined
@@ -46,9 +35,7 @@ export const TranscriptionProvider = ({
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<TranscriptSegment[] | null>(
-    transcriptData
-  );
+  const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
 
   return (
     <TranscriptionContext.Provider

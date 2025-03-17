@@ -88,7 +88,7 @@ export default function UploadPage() {
       setAudioUrl(audioUrl);
 
       // 發送轉錄請求
-      // transcribeAudio(audioBlob);
+      transcribeAudio(audioBlob);
 
       // 繼續處理 (例如發送到Whisper API)
     } catch (error) {
@@ -177,29 +177,22 @@ export default function UploadPage() {
         </button>
       </div>
 
-      {/* <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="p-4 sm:p-16 max-w-[960px]"
-      >
-        {isLoading ? (
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/30">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full mx-auto my-6"
-          ></motion.div>
-        ) : (
-          <>
-            <p className="mb-2 text-gray-700">影片預覽：</p>
-            <video
-              src={videoUrl}
-              controls
-              className="w-full rounded-lg"
-            ></video>
-          </>
-        )}
-      </motion.div> */}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 flex items-center justify-center z-50"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="w-12 h-12 border-6 border-gray-300 border-t-gray-500 rounded-full"
+            />
+          </motion.div>
+        </div>
+      )}
 
       {/* {audioUrl && (
         <div className="p-4 bg-gray-50 rounded-lg">

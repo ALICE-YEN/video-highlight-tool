@@ -32,7 +32,7 @@ export default function TranscriptPlayer() {
     <div className="flex w-full h-screen bg-gray-900 relative">
       {/* 左側 - 影片播放器 */}
       <div
-        className={`flex flex-col justify-center items-center transition-all duration-300 p-6 ${
+        className={`flex flex-col justify-center items-center transition-all duration-300 py-10 px-6 ${
           isTranscriptOpen ? "w-2/3" : "w-full"
         }`}
       >
@@ -53,7 +53,7 @@ export default function TranscriptPlayer() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 300, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-1/3 h-full bg-white shadow-lg p-6 overflow-y-auto relative"
+          className="w-1/3 h-full bg-white shadow-lg py-8 px-6 overflow-y-auto relative"
         >
           {/* 標題 + 關閉按鈕 */}
           <div className="flex justify-between items-center mb-3">
@@ -81,13 +81,14 @@ export default function TranscriptPlayer() {
                     ? "white"
                     : "black",
               }}
-              className={`p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-gray-200`}
+              whileHover={{ backgroundColor: "#E5E7EB" }}
+              className="p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-gray-200"
               onClick={() => handleSeek(segment.start)}
             >
               <span className="text-gray-500 text-xs font-semibold">
                 {formatTime(segment.start)}
               </span>
-              <span className="ml-2">{segment.text}</span>
+              <span className="ml-2.5">{segment.text}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -108,7 +109,6 @@ export default function TranscriptPlayer() {
   );
 }
 
-// 時間格式轉換
 const formatTime = (time: number) => {
   const minutes = Math.floor(time / 60);
   const seconds = Math.floor(time % 60);
