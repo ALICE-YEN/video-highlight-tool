@@ -3,12 +3,21 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
+import { useTranscription } from "@/contexts/TranscriptionContext";
+import { MAX_VIDEO_SIZE_MB } from "@/utils/constants";
 
 export default function UploadPage() {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const {
+    setVideoFile,
+    setVideoUrl,
+    setAudioFile,
+    setAudioUrl,
+    setTranscript,
+  } = useTranscription();
+
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = async (file: File | null) => {
@@ -18,6 +27,13 @@ export default function UploadPage() {
       toast.error("請選擇有效的影片文件");
       return;
     }
+
+    if (file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
+      toast.error("影片大小不可超過 20MB");
+      return;
+    }
+
+    setVideoFile(file);
 
     setIsLoading(true);
 
@@ -65,15 +81,42 @@ export default function UploadPage() {
   const extractAudio = async (file: File) => {
     try {
       const audioBlob = await extractAudioAPI(file);
+      setAudioFile(audioBlob);
 
       // 創建URL並設置給audio元素
       const audioUrl = URL.createObjectURL(audioBlob);
       setAudioUrl(audioUrl);
 
+      // 發送轉錄請求
+      // transcribeAudio(audioBlob);
+
       // 繼續處理 (例如發送到Whisper API)
     } catch (error) {
       console.error(error);
       toast.error("音頻提取失敗");
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append("audio", audioBlob);
+
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "轉錄 API 失敗");
+      }
+
+      setTranscript(data.transcription.segments);
+    } catch (error) {
+      console.error("❌ 轉錄 API 失敗:", error);
+      toast.error("轉錄 API 失敗");
     }
   };
 
@@ -103,64 +146,62 @@ export default function UploadPage() {
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
       <h2 className="text-xl font-bold mb-4">上傳影片</h2>
 
-      {!videoUrl ? (
-        <div
-          className="w-8/12 min-w-72 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white"
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <div className="flex flex-col items-center">
-            <motion.div
-              animate={{
-                scaleY: isDragging ? 0.6 : 1,
-                boxShadow: isDragging ? "0px 4px 10px rgba(0,0,0,0.2)" : "none",
-              }}
-              transition={{ duration: 0.2 }}
-              className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer"
-              onClick={handleSelectFile}
-            >
-              <span className="text-6xl text-gray-400">⬆</span>
-            </motion.div>
-            <p className="mt-8 text-gray-700">將你要上傳的影片拖曳到這裡</p>
-            <p className="mt-2 text-gray-500 text-sm">
-              影片在發布前都會維持私人狀態。
-            </p>
-          </div>
-          <button
-            className="mt-6 px-4 py-2 text-sm bg-black text-white rounded-full cursor-pointer"
+      <div
+        className="w-8/12 min-w-72 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div className="flex flex-col items-center">
+          <motion.div
+            animate={{
+              scaleY: isDragging ? 0.6 : 1,
+              boxShadow: isDragging ? "0px 4px 10px rgba(0,0,0,0.2)" : "none",
+            }}
+            transition={{ duration: 0.2 }}
+            className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center cursor-pointer"
             onClick={handleSelectFile}
           >
-            選取檔案
-          </button>
+            <span className="text-6xl text-gray-400">⬆</span>
+          </motion.div>
+          <p className="mt-8 text-gray-700">將你要上傳的影片拖曳到這裡</p>
+          <p className="mt-2 text-gray-500 text-sm">
+            影片在發布前都會維持私人狀態。
+          </p>
         </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="p-4 sm:p-16 max-w-[960px]"
+        <button
+          className="mt-6 px-4 py-2 text-sm bg-black text-white rounded-full cursor-pointer"
+          onClick={handleSelectFile}
         >
-          {isLoading ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full mx-auto my-6"
-            ></motion.div>
-          ) : (
-            <>
-              <p className="mb-2 text-gray-700">影片預覽：</p>
-              <video
-                src={videoUrl}
-                controls
-                className="w-full rounded-lg"
-              ></video>
-            </>
-          )}
-        </motion.div>
-      )}
+          選取檔案
+        </button>
+      </div>
 
-      {audioUrl && (
+      {/* <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="p-4 sm:p-16 max-w-[960px]"
+      >
+        {isLoading ? (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+            className="w-10 h-10 border-4 border-gray-300 border-t-gray-500 rounded-full mx-auto my-6"
+          ></motion.div>
+        ) : (
+          <>
+            <p className="mb-2 text-gray-700">影片預覽：</p>
+            <video
+              src={videoUrl}
+              controls
+              className="w-full rounded-lg"
+            ></video>
+          </>
+        )}
+      </motion.div> */}
+
+      {/* {audioUrl && (
         <div className="p-4 bg-gray-50 rounded-lg">
           <p className="mb-2 text-gray-700 font-medium">提取的音訊：</p>
           <audio src={audioUrl} controls className="w-full"></audio>
@@ -168,7 +209,7 @@ export default function UploadPage() {
             音訊已轉換為 16kHz 單聲道 WAV 格式，適用於 Whisper AI 處理
           </p>
         </div>
-      )}
+      )} */}
 
       {/* 隱藏的 input */}
       <input

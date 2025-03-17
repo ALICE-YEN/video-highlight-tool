@@ -107,7 +107,7 @@ async function extractAudio(inputPath: string, outputPath: string) {
         reject(err);
       })
       .on("end", () => {
-        console.log("✅ 音頻提取完成");
+        // console.log("✅ 音頻提取完成");
         resolve();
       })
       .save(outputPath);

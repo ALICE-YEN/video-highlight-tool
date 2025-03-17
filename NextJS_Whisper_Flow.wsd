@@ -1,0 +1,26 @@
+@startuml
+title Next.js Whisper API 處理流程
+
+actor User
+participant "Next.js 前端" as FE
+participant "Next.js 後端" as BE
+participant "FFmpeg (提取音訊)" as FFmpeg
+participant "OpenAI Whisper API" as Whisper
+
+== 影片上傳 ==
+User -> FE: 選擇並上傳 .mp4
+FE -> BE: 1️⃣ POST /api/extract-audio (附帶影片)
+
+== 提取音訊 ==
+BE -> FFmpeg: 2️⃣ 轉換 .mp4 → .wav
+FFmpeg -> BE: 3️⃣ 返回 .wav 檔案路徑
+
+== Whisper API 轉錄 ==
+BE -> Whisper: 4️⃣ 發送 .wav 進行轉錄
+Whisper -> BE: 5️⃣ 返回 JSON 字幕
+
+== 返回結果 ==
+BE -> FE: 6️⃣ 傳回 JSON 字幕
+FE -> User: 7️⃣ 顯示字幕於影片播放器
+
+@enduml

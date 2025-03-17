@@ -1,6 +1,4 @@
 // spawn：需要本機或伺服器已經安裝 FFmpeg
-// fluent-ffmpeg + ffmpeg-static：不需要本機安裝 FFmpeg，使用 ffmpeg-static 內建的執行檔
-// ffmpeg-static 內建 跨平台可執行檔，適合 Serverless（無伺服器）環境，如 Vercel / AWS Lambda
 
 import { NextResponse } from "next/server";
 import fs from "fs"; // Node.js 內建模組
