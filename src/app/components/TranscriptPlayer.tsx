@@ -8,6 +8,8 @@ import {
   IoChevronForward,
   IoStar,
   IoStarOutline,
+  IoCreateOutline,
+  IoCheckmarkOutline,
 } from "react-icons/io5";
 import { TranscriptSection } from "@/types/interfaces";
 
@@ -16,6 +18,10 @@ export default function TranscriptPlayer() {
 
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // 控制字幕區開關
+  const [editingSectionId, setEditingSectionId] = useState<number | null>(null); // 只存當前編輯的 section id
+  const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null); // 只存當前編輯的 segment id
+  const [tempText, setTempText] = useState<string>(""); // 暫存編輯文字
+  const [isComposing, setIsComposing] = useState<boolean>(false); // 用來追蹤中文輸入狀態
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -29,45 +35,80 @@ export default function TranscriptPlayer() {
     return () => video.removeEventListener("timeupdate", updateCurrentTime);
   }, []);
 
-  const toggleHighlight = (sectionIndex: number, segmentIndex: number) => {
+  const toggleHighlight = (segmentId: number) => {
     setTranscript((prev) =>
-      prev.map((section, sIndex) =>
-        sIndex !== sectionIndex
-          ? section
-          : {
-              ...section,
-              segments: section.segments.map((segment) =>
-                segment.id !== segmentIndex
-                  ? segment
-                  : { ...segment, highlighted: !segment.highlighted }
-              ),
-            }
+      prev.map((section: TranscriptSection) => ({
+        ...section,
+        segments: section.segments.map((segment) =>
+          segment.id !== segmentId
+            ? segment
+            : { ...segment, highlighted: !segment.highlighted }
+        ),
+      }))
+    );
+  };
+
+  // 編輯字幕
+  const startEditingSegment = (segmentId: number, currentText: string) => {
+    setEditingSegmentId(segmentId);
+    setTempText(currentText);
+  };
+
+  const updateSegmentText = (segmentId: number, newText: string) => {
+    setTranscript((prev) =>
+      prev.map((section: TranscriptSection) => ({
+        ...section,
+        segments: section.segments.map((segment) =>
+          segment.id !== segmentId ? segment : { ...segment, text: newText }
+        ),
+      }))
+    );
+  };
+
+  const confirmSegmentEdit = (segmentId: number) => {
+    updateSegmentText(segmentId, tempText);
+    setEditingSegmentId(null);
+  };
+
+  // 編輯段落標題
+  const startEditingSectionTitle = (
+    sectionId: number,
+    currentTitle: string
+  ) => {
+    setEditingSectionId(sectionId);
+    setTempText(currentTitle);
+  };
+
+  const updateSectionTitle = (sectionId: number, newTitle: string) => {
+    setTranscript((prev) =>
+      prev.map((section) =>
+        section.id !== sectionId ? section : { ...section, title: newTitle }
       )
     );
   };
 
-  const handleEditText = (
-    sectionIndex: number,
-    segmentIndex: number,
-    newText: string
+  const confirmSectionTitleEdit = (sectionId: number) => {
+    updateSectionTitle(sectionId, tempText);
+    setEditingSectionId(null);
+    setTempText("");
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    type: "segment" | "section"
   ) => {
-    setTranscript((prev: TranscriptSection[]) => {
-      return prev.map((section, sIndex) => {
-        if (sIndex !== sectionIndex) return section; // 其他 section 不變
-
-        return {
-          ...section,
-          segments: section.segments.map((segment) => {
-            if (segment.id !== segmentIndex) return segment; // 其他 segment 不變
-
-            return {
-              ...segment,
-              text: newText, // 產生新的物件，觸發 re-render
-            };
-          }),
-        };
-      });
-    });
+    if (e.key === "Enter" && !isComposing) {
+      e.preventDefault();
+      if (type === "segment" && editingSegmentId !== null) {
+        confirmSegmentEdit(editingSegmentId);
+      } else if (type === "section" && editingSectionId !== null) {
+        confirmSectionTitleEdit(editingSectionId);
+      }
+    } else if (e.key === "Escape") {
+      setEditingSegmentId(null);
+      setEditingSectionId(null);
+      setTempText("");
+    }
   };
 
   const handleSeek = (time: number) => {
@@ -86,13 +127,17 @@ export default function TranscriptPlayer() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -300, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-1/3 h-full bg-white shadow-lg py-8 px-6 overflow-y-auto relative"
+          className="w-1/3 h-full bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
         >
-          {/* 標題 + 關閉按鈕 */}
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-lg font-bold">字幕列表</h2>
             <button
-              onClick={() => setIsTranscriptOpen(false)}
+              onClick={() => {
+                setIsTranscriptOpen(false);
+                setEditingSectionId(null);
+                setEditingSegmentId(null);
+                setTempText("");
+              }}
               className="text-gray-500 hover:text-gray-800 transition cursor-pointer"
             >
               <IoClose size={24} />
@@ -100,9 +145,44 @@ export default function TranscriptPlayer() {
           </div>
 
           {/* 字幕內容 */}
-          {transcript.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-6">
-              <h3 className="mb-2 text-lg font-semibold">{section.title}</h3>
+          {transcript.map((section) => (
+            <div key={section.id} className="mb-6">
+              {/* 可編輯段落標題 */}
+              <div className="flex items-center justify-between mb-2">
+                {editingSectionId === section.id ? (
+                  <input
+                    type="text"
+                    value={tempText}
+                    className="border border-gray-400 px-2 py-1 rounded-md focus:outline-none"
+                    onChange={(e) => setTempText(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "section")}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={() => setIsComposing(false)}
+                    autoFocus
+                  />
+                ) : (
+                  <h3 className="text-lg font-semibold">{section.title}</h3>
+                )}
+
+                {/* 可編輯段落標題，切換按鈕 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (editingSectionId === section.id) {
+                      confirmSectionTitleEdit(section.id);
+                    } else {
+                      startEditingSectionTitle(section.id, section.title);
+                    }
+                  }}
+                  className="ml-2 text-gray-500 hover:text-gray-700 cursor-pointer"
+                >
+                  {editingSectionId === section.id ? (
+                    <IoCheckmarkOutline size={20} />
+                  ) : (
+                    <IoCreateOutline size={20} />
+                  )}
+                </button>
+              </div>
 
               {/* 顯示字幕列表 */}
               {section.segments.map((segment) => (
@@ -121,35 +201,63 @@ export default function TranscriptPlayer() {
                   </span>
 
                   {/* 可編輯字幕 */}
-                  {/* <input
-                    type="text"
-                    value={segment.text}
-                    className="ml-2.5 w-full bg-transparent border-none focus:ring-0"
-                    onChange={(e) =>
-                      handleEditText(sectionIndex, segment.id, e.target.value)
-                    }
-                    onClick={(e) => e.stopPropagation()} // 避免點擊 input 時觸發 handleSeek
-                  /> */}
-                  <span
-                    className={`mx-2.5 w-full ${
-                      segment.highlighted === false && "text-gray-400"
-                    }`}
+                  <div className="mx-2.5 w-full flex items-center">
+                    {editingSegmentId === segment.id ? (
+                      <input
+                        type="text"
+                        value={tempText}
+                        className="border border-gray-400 px-2 py-1 rounded-md focus:outline-none"
+                        onChange={(e) => setTempText(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, "segment")} // 監聽鍵盤事件
+                        onCompositionStart={() => setIsComposing(true)} // 中文輸入開始
+                        onCompositionEnd={() => setIsComposing(false)} // 中文輸入結束
+                        onClick={(e) => e.stopPropagation()} // 避免點擊 input 時觸發 handleSeek
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        // segment.highlighted，預設沒有值，boolean 是後天加上
+                        className={`${
+                          segment.highlighted === false && "text-gray-400"
+                        }`}
+                      >
+                        {segment.text}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 可編輯字幕，切換按鈕 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (editingSegmentId === segment.id) {
+                        confirmSegmentEdit(segment.id);
+                      } else {
+                        startEditingSegment(segment.id, segment.text);
+                      }
+                    }}
+                    className="mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
                   >
-                    {segment.text}
-                  </span>
+                    {editingSegmentId === segment.id ? (
+                      <IoCheckmarkOutline size={20} />
+                    ) : (
+                      <IoCreateOutline size={20} />
+                    )}
+                  </button>
 
                   {/* Highlight 切換按鈕 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation(); // 避免點擊星星時觸發 handleSeek
-                      toggleHighlight(sectionIndex, segment.id);
+                      toggleHighlight(segment.id);
                     }}
-                    className="transition"
+                    className="transition cursor-pointer"
                   >
+                    {/* segment.highlighted，預設沒有值，boolean 是後天加上 */}
                     {segment.highlighted === false ? (
                       <IoStarOutline
                         size={20}
-                        className="text-gray-400 hover:text-gray-300"
+                        className="text-gray-400 hover:text-gray-700"
                       />
                     ) : (
                       <IoStar

@@ -113,7 +113,7 @@ export default function UploadPage() {
         throw new Error(data.error || "轉錄 API 失敗");
       }
 
-      setTranscript(data.transcription.segments);
+      setTranscript(data.transcript);
     } catch (error) {
       console.error("❌ 轉錄 API 失敗:", error);
       toast.error("轉錄 API 失敗");
@@ -165,8 +165,11 @@ export default function UploadPage() {
             <span className="text-6xl text-gray-400">⬆</span>
           </motion.div>
           <p className="mt-8 text-gray-700">將你要上傳的影片拖曳到這裡</p>
-          <p className="mt-2 text-gray-500 text-sm">
-            影片在發布前都會維持私人狀態。
+          <p className="mt-2 text-gray-500 text-sm text-center md:text-left">
+            上傳影片後，系統將自動添加字幕
+            <span className="hidden md:inline">，</span>
+            <br className="md:hidden" />
+            你可以修改字幕、預覽內容，並選擇精選片段
           </p>
         </div>
         <button
