@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { formatTime } from "@/utils/helpers";
 import type { TranscriptSegment } from "@/types/interfaces";
 import {
@@ -21,6 +21,8 @@ export default function Timeline({
 }: TimelineProps) {
   const [numTicks, setNumTicks] = useState<number>(MAX_NUM_TICKS_COMPUTER); // 將 duration 分成多少單位
 
+  const timelineRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const handleResize = () => {
       setNumTicks(
@@ -41,10 +43,22 @@ export default function Timeline({
     ticks.push(i);
   }
 
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!timelineRef.current) return;
+    const rect = timelineRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left; // 取得點擊的 X 座標
+    const newTime = (clickX / rect.width) * duration; // 計算對應時間
+    onSeek(newTime); // 讓影片跳轉到計算出的時間點
+  };
+
   return (
     <div className="relative w-full mt-4">
       {/* 時間軸容器 */}
-      <div className="relative w-full h-6 bg-gray-600 rounded-md">
+      <div
+        ref={timelineRef}
+        className="relative w-full h-6 bg-gray-600 rounded-md cursor-pointer"
+        onClick={handleTimelineClick} // 讓整個 timeline 都可以點擊
+      >
         {/* 高亮區間 */}
         {highlightSegments.map((segment, index) => (
           <div
@@ -54,7 +68,6 @@ export default function Timeline({
               left: `${(segment.start / duration) * 100}%`,
               width: `${((segment.end - segment.start) / duration) * 100}%`,
             }}
-            onClick={() => onSeek(segment.start)}
           />
         ))}
 

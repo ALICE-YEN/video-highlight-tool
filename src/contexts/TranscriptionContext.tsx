@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { TranscriptSection, TranscriptSegment } from "@/types/interfaces";
+import type { TranscriptSection, TranscriptSegment } from "@/types/interfaces";
 
 interface TranscriptionContextType {
   videoFile: File | null;

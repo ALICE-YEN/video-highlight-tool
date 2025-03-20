@@ -4,9 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoClose, IoChevronForward } from "react-icons/io5";
 import { useTranscription } from "@/contexts/TranscriptionContext";
+import useLocalStorageState from "@/hooks/useLocalStorageState";
 import TranscriptSection from "@/app/components/TranscriptSection";
 import VideoModeToggle from "@/app/components/VideoModeToggle";
 import Timeline from "@/app/components/Timeline";
+import {
+  SUBTITLE_FONT_SIZE_DEFAULT,
+  SUBTITLE_FONT_SIZE_MIN,
+  SUBTITLE_FONT_SIZE_MAX,
+} from "@/utils/constants";
 
 export default function TranscriptPlayer() {
   const { videoUrl, transcript, highlightSegments, duration } =
@@ -14,7 +20,15 @@ export default function TranscriptPlayer() {
 
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
-  const [isHighlightMode, setIsHighlightMode] = useState<boolean>(false); // 控制字幕區開關
+  const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
+  const [subtitleFontSize, setSubtitleFontSize] = useState<number>(
+    SUBTITLE_FONT_SIZE_DEFAULT
+  );
+
+  const [isHighlightMode, setIsHighlightMode] = useLocalStorageState<boolean>(
+    "highlightMode",
+    false
+  ); // 控制字幕區開關
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -26,6 +40,44 @@ export default function TranscriptPlayer() {
     video.addEventListener("timeupdate", updateCurrentTime);
 
     return () => video.removeEventListener("timeupdate", updateCurrentTime);
+  }, []);
+
+  // 動態更新字幕
+  useEffect(() => {
+    let activeSegment = null;
+
+    for (const section of transcript) {
+      for (const segment of section.segments) {
+        if (currentTime >= segment.start && currentTime < segment.end) {
+          activeSegment = segment;
+          break;
+        }
+      }
+      if (activeSegment) break;
+    }
+
+    setCurrentSubtitle(activeSegment ? activeSegment.text : "");
+  }, [currentTime, transcript]);
+
+  // 監聽鍵盤事件，調整字幕大小
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      console.log("event", event.key);
+      if (event.key === "=" || event.key === "+") {
+        // 放大字體，限制最大
+        setSubtitleFontSize((prevSize) =>
+          Math.min(prevSize + 2, SUBTITLE_FONT_SIZE_MAX)
+        );
+      } else if (event.key === "-" || event.key === "_") {
+        // 縮小字體，限制最小
+        setSubtitleFontSize((prevSize) =>
+          Math.max(prevSize - 2, SUBTITLE_FONT_SIZE_MIN)
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
   // 自動跳過非精選片段
@@ -112,7 +164,7 @@ export default function TranscriptPlayer() {
         // 當字幕區關閉時，顯示展開按鈕
         <motion.button
           onClick={() => setIsTranscriptOpen(true)}
-          className="absolute left-1.5 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-r-lg shadow-lg cursor-pointer"
+          className="absolute left-1.5 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-r-lg shadow-lg cursor-pointer z-[5]"
           initial={{ scale: 1, x: 0 }}
           whileHover={{ scale: 1.05, x: 3 }}
           whileTap={{ scale: 0.95 }}
@@ -124,8 +176,8 @@ export default function TranscriptPlayer() {
 
       {/* 右側 - 影片播放器 */}
       <div
-        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-10 px-6 ${
-          isTranscriptOpen ? "w-2/3" : "w-full"
+        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-10 px-6 relative ${
+          isTranscriptOpen ? "w-2/3" : "w-full sm:px-36"
         }`}
       >
         <div className="w-full flex justify-center mb-4">
@@ -137,14 +189,23 @@ export default function TranscriptPlayer() {
 
         {videoUrl && (
           <>
-            <div className="w-full flex justify-center">
-              <div className="w-full max-w-xl">
+            <div className="w-full flex justify-center relative">
+              <div className="w-full max-w-xl relative">
                 <video
                   ref={videoRef}
                   src={videoUrl}
                   controls
-                  className="w-full rounded-md shadow-lg"
+                  className="w-full rounded-md shadow-lg focus:outline-none"
                 ></video>
+
+                {currentSubtitle && (
+                  <div
+                    className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 bg-opacity-70 text-white font-semibold px-3 py-1.5 rounded-md text-center"
+                    style={{ fontSize: `${subtitleFontSize}px` }}
+                  >
+                    {currentSubtitle}
+                  </div>
+                )}
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   IoStar,
   IoStarOutline,
@@ -26,6 +26,21 @@ export default function TranscriptSegment({
   const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null); // 只存當前編輯的 segment id
   const [tempText, setTempText] = useState<string>(""); // 暫存編輯文字
   const [isComposing, setIsComposing] = useState<boolean>(false); // 用來追蹤中文輸入狀態
+
+  const segmentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (
+      currentTime >= segment.start &&
+      currentTime <= segment.end &&
+      segmentRef.current
+    ) {
+      segmentRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center", // 讓當前字幕顯示在視圖中央
+      });
+    }
+  }, [currentTime, segment.start, segment.end]);
 
   const startEditingSegment = (segmentId: number, currentText: string) => {
     setEditingSegmentId(segmentId);
@@ -78,8 +93,9 @@ export default function TranscriptSegment({
 
   return (
     <div
+      ref={segmentRef}
       className={`flex items-center justify-between p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out ${
-        currentTime >= segment.start && currentTime <= segment.end
+        currentTime >= segment.start && currentTime < segment.end
           ? "bg-blue-400 text-white"
           : "hover:bg-gray-100"
       }`}
