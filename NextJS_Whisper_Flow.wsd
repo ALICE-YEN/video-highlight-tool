@@ -6,21 +6,29 @@ participant "Next.js 前端" as FE
 participant "Next.js 後端" as BE
 participant "FFmpeg (提取音訊)" as FFmpeg
 participant "OpenAI Whisper API" as Whisper
+participant "OpenAI GPT API" as GPT
 
 == 影片上傳 ==
-User -> FE: 選擇並上傳 .mp4
+User -> FE: 選擇並上傳影片
 FE -> BE: 1️⃣ POST /api/extract-audio (附帶影片)
 
 == 提取音訊 ==
-BE -> FFmpeg: 2️⃣ 轉換 .mp4 → .wav
-FFmpeg -> BE: 3️⃣ 返回 .wav 檔案路徑
+BE -> FFmpeg: 2️⃣ 轉換影片為音訊 (.wav)
+FFmpeg --> BE: 3️⃣ 返回 .wav 檔案
+BE --> FE: 4️⃣ 返回 .wav 檔案
 
 == Whisper API 轉錄 ==
-BE -> Whisper: 4️⃣ 發送 .wav 進行轉錄
-Whisper -> BE: 5️⃣ 返回 JSON 字幕
+FE -> BE: 5️⃣ POST /api/transcribe (附帶 .wav)
+BE -> Whisper: 6️⃣ 轉錄音訊 (.wav)，轉錄的文字包含時間戳
+Whisper --> BE: 7️⃣ 返回 JSON 字幕
+
+== 使用 GPT API 解析字幕 ==
+BE -> GPT: 8️⃣ 解析字幕，合理分段並產生標題
+GPT --> BE: 9️⃣ 返回結構化 JSON (含段落 & 標題)
 
 == 返回結果 ==
-BE -> FE: 6️⃣ 傳回 JSON 字幕
-FE -> User: 7️⃣ 顯示字幕於影片播放器
+BE -> FE: 🔟 返回結構化 JSON (含段落 & 標題)
+FE -> User: 1️⃣1️⃣ 顯示字幕於影片播放器
+
 
 @enduml

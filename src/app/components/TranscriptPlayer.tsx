@@ -1,14 +1,35 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranscription } from "@/contexts/TranscriptionContext";
 import { motion } from "framer-motion";
-import { IoClose, IoChevronBack } from "react-icons/io5"; // 引入 icon
+import { IoClose, IoChevronForward } from "react-icons/io5";
+import { useTranscription } from "@/contexts/TranscriptionContext";
+import useLocalStorageState from "@/hooks/useLocalStorageState";
+import TranscriptSection from "@/app/components/TranscriptSection";
+import VideoModeToggle from "@/app/components/VideoModeToggle";
+import Timeline from "@/app/components/Timeline";
+import {
+  SUBTITLE_FONT_SIZE_DEFAULT,
+  SUBTITLE_FONT_SIZE_MIN,
+  SUBTITLE_FONT_SIZE_MAX,
+} from "@/utils/constants";
 
 export default function TranscriptPlayer() {
-  const { videoUrl, transcript } = useTranscription();
+  const { videoUrl, transcript, highlightSegments, duration } =
+    useTranscription();
+
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // 控制字幕區開關
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
+  const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
+  const [subtitleFontSize, setSubtitleFontSize] = useState<number>(
+    SUBTITLE_FONT_SIZE_DEFAULT
+  );
+
+  const [isHighlightMode, setIsHighlightMode] = useLocalStorageState<boolean>(
+    "highlightMode",
+    false
+  ); // 控制字幕區開關
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -21,6 +42,85 @@ export default function TranscriptPlayer() {
     return () => video.removeEventListener("timeupdate", updateCurrentTime);
   }, []);
 
+  // 動態更新字幕
+  useEffect(() => {
+    let activeSegment = null;
+
+    for (const section of transcript) {
+      for (const segment of section.segments) {
+        if (currentTime >= segment.start && currentTime < segment.end) {
+          activeSegment = segment;
+          break;
+        }
+      }
+      if (activeSegment) break;
+    }
+
+    setCurrentSubtitle(activeSegment ? activeSegment.text : "");
+  }, [currentTime, transcript]);
+
+  // 監聽鍵盤事件，調整字幕大小
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      console.log("event", event.key);
+      if (event.key === "=" || event.key === "+") {
+        // 放大字體，限制最大
+        setSubtitleFontSize((prevSize) =>
+          Math.min(prevSize + 2, SUBTITLE_FONT_SIZE_MAX)
+        );
+      } else if (event.key === "-" || event.key === "_") {
+        // 縮小字體，限制最小
+        setSubtitleFontSize((prevSize) =>
+          Math.max(prevSize - 2, SUBTITLE_FONT_SIZE_MIN)
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
+  // 自動跳過非精選片段
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || highlightSegments.length === 0 || !isHighlightMode) return;
+
+    const seekToNextSegment = () => {
+      const currentTime = video.currentTime;
+
+      // 找到目前時間在哪個區間內
+      const inSegment = highlightSegments.find(
+        (seg) => currentTime >= seg.start && currentTime < seg.end
+      );
+
+      // 如果當前時間不在任何 highlight 片段，跳到下一個可播放的區間
+      if (!inSegment) {
+        const nextSegment = highlightSegments.find(
+          (seg) => seg.start > currentTime
+        );
+        if (nextSegment) {
+          // Smooth transition between selected clips
+          video.style.transition =
+            "opacity 0.3s ease-in-out, transform 0.3s ease-in-out";
+          video.style.opacity = "0.8";
+
+          setTimeout(() => {
+            video.currentTime = nextSegment.start;
+            video.style.opacity = "1";
+          }, 250);
+        } else {
+          // 沒有更多可播放的片段時
+          video.pause();
+          video.currentTime = 0;
+        }
+      }
+    };
+
+    video.addEventListener("timeupdate", seekToNextSegment);
+
+    return () => video.removeEventListener("timeupdate", seekToNextSegment);
+  }, [isHighlightMode, highlightSegments]);
+
   const handleSeek = (time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time;
@@ -29,91 +129,110 @@ export default function TranscriptPlayer() {
   };
 
   return (
-    <div className="flex w-full h-screen bg-gray-900 relative">
-      {/* 左側 - 影片播放器 */}
-      <div
-        className={`flex flex-col justify-center items-center transition-all duration-300 py-10 px-6 ${
-          isTranscriptOpen ? "w-2/3" : "w-full"
-        }`}
-      >
-        {videoUrl && (
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            className="w-full max-w-2xl rounded-md shadow-lg"
-          ></video>
-        )}
-      </div>
-
-      {/* 右側 - 字幕區域 */}
+    <div className="flex flex-col-reverse md:flex-row w-full h-screen bg-gray-900 relative">
+      {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
+          initial={{ y: 300, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 300, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-1/3 h-full bg-white shadow-lg py-8 px-6 overflow-y-auto relative"
+          className="w-full md:w-1/3 h-1/2 md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
         >
-          {/* 標題 + 關閉按鈕 */}
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold">字幕列表</h2>
+            <h2 className="text-base md:text-lg font-bold">字幕列表</h2>
             <button
-              onClick={() => setIsTranscriptOpen(false)}
+              onClick={() => {
+                setIsTranscriptOpen(false);
+              }}
               className="text-gray-500 hover:text-gray-800 transition cursor-pointer"
             >
               <IoClose size={24} />
             </button>
           </div>
 
-          {/* 字幕內容 */}
-          {transcript.map((segment) => (
-            <motion.div
-              key={segment.id}
-              initial={{ opacity: 0.7 }}
-              animate={{
-                backgroundColor:
-                  currentTime >= segment.start && currentTime <= segment.end
-                    ? "#3B82F6"
-                    : "transparent",
-                color:
-                  currentTime >= segment.start && currentTime <= segment.end
-                    ? "white"
-                    : "black",
-              }}
-              whileHover={{ backgroundColor: "#E5E7EB" }}
-              className="p-3 rounded-md cursor-pointer text-sm transition-all duration-200 ease-in-out hover:bg-gray-200"
-              onClick={() => handleSeek(segment.start)}
-            >
-              <span className="text-gray-500 text-xs font-semibold">
-                {formatTime(segment.start)}
-              </span>
-              <span className="ml-2.5">{segment.text}</span>
-            </motion.div>
+          {transcript.map((section) => (
+            <TranscriptSection
+              key={section.id}
+              section={section}
+              currentTime={currentTime}
+              onSeek={handleSeek}
+            />
           ))}
         </motion.div>
       ) : (
         // 當字幕區關閉時，顯示展開按鈕
-        <motion.button
-          onClick={() => setIsTranscriptOpen(true)}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-l-lg shadow-lg cursor-pointer"
-          initial={{ scale: 1, x: 0 }}
-          whileHover={{ scale: 1.05, x: -3 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 250 }}
-        >
-          <IoChevronBack size={22} />
-        </motion.button>
+        <>
+          {/* 桌機版按鈕：左側中間，箭頭向右 */}
+          <motion.button
+            onClick={() => setIsTranscriptOpen(true)}
+            className="absolute left-1.5 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-r-lg shadow-lg cursor-pointer z-[5] hidden md:block"
+            initial={{ scale: 1, x: 0 }}
+            whileHover={{ scale: 1.05, x: 3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 250 }}
+          >
+            <IoChevronForward size={22} />
+          </motion.button>
+
+          {/* 手機版按鈕：底部中間，箭頭向上 */}
+          <motion.button
+            onClick={() => setIsTranscriptOpen(true)}
+            className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white p-2 rounded-t-lg shadow-lg cursor-pointer z-[5] md:hidden"
+            initial={{ scale: 1, y: 0 }}
+            whileHover={{ scale: 1.05, y: -3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 250 }}
+          >
+            <IoChevronForward size={22} className="rotate-[-90deg]" />
+          </motion.button>
+        </>
       )}
+
+      {/* 右側 - 影片播放器 */}
+      <div
+        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-5 md:py-10 px-6 relative ${
+          isTranscriptOpen ? "w-full md:w-2/3" : "w-full sm:px-36"
+        }`}
+      >
+        <div className="w-full flex justify-center mb-4">
+          <VideoModeToggle
+            isHighlightMode={isHighlightMode}
+            setIsHighlightMode={setIsHighlightMode}
+          />
+        </div>
+
+        {videoUrl && (
+          <>
+            <div className="w-full flex justify-center relative">
+              <div className="w-full max-w-xl relative">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  className="w-full rounded-md shadow-lg focus:outline-none"
+                ></video>
+
+                {currentSubtitle && (
+                  <div
+                    className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-900 bg-opacity-70 text-white font-semibold px-3 py-1.5 rounded-md text-center"
+                    style={{ fontSize: `${subtitleFontSize}px` }}
+                  >
+                    {currentSubtitle}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Timeline
+              highlightSegments={highlightSegments}
+              duration={duration}
+              currentTime={currentTime}
+              onSeek={handleSeek}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
-
-const formatTime = (time: number) => {
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-    2,
-    "0"
-  )}`;
-};
