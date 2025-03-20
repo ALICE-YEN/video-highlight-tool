@@ -60,7 +60,7 @@ export default function VideoModeToggle({
           onClick={() => handleClick("original")}
           onMouseEnter={() => setHoveredButton("original")}
           onMouseLeave={() => setHoveredButton(null)}
-          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 cursor-pointer ${
+          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 cursor-pointer focus:outline-none ${
             isHighlightMode ? "text-gray-500" : "text-white"
           }`}
         >
@@ -70,7 +70,7 @@ export default function VideoModeToggle({
           onClick={() => handleClick("highlighted")}
           onMouseEnter={() => setHoveredButton("highlighted")}
           onMouseLeave={() => setHoveredButton(null)}
-          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 cursor-pointer ${
+          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 cursor-pointer focus:outline-none ${
             isHighlightMode ? "text-white" : "text-gray-500"
           }`}
         >

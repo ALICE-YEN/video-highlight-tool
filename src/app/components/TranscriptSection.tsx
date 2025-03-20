@@ -73,7 +73,9 @@ export default function TranscriptSection({
             autoFocus
           />
         ) : (
-          <h3 className="text-lg font-semibold">{section.title}</h3>
+          <h3 className="text-base md:text-lg font-semibold">
+            {section.title}
+          </h3>
         )}
 
         {/* 可編輯段落標題，切換按鈕 */}

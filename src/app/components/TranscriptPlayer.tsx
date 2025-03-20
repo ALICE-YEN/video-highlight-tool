@@ -129,18 +129,18 @@ export default function TranscriptPlayer() {
   };
 
   return (
-    <div className="flex w-full h-screen bg-gray-900 relative">
+    <div className="flex flex-col-reverse md:flex-row w-full h-screen bg-gray-900 relative">
       {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
-          initial={{ x: -300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -300, opacity: 0 }}
+          initial={{ y: 300, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 300, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-1/3 h-full bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
+          className="w-full md:w-1/3 h-1/2 md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
         >
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold">字幕列表</h2>
+            <h2 className="text-base md:text-lg font-bold">字幕列表</h2>
             <button
               onClick={() => {
                 setIsTranscriptOpen(false);
@@ -162,22 +162,37 @@ export default function TranscriptPlayer() {
         </motion.div>
       ) : (
         // 當字幕區關閉時，顯示展開按鈕
-        <motion.button
-          onClick={() => setIsTranscriptOpen(true)}
-          className="absolute left-1.5 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-r-lg shadow-lg cursor-pointer z-[5]"
-          initial={{ scale: 1, x: 0 }}
-          whileHover={{ scale: 1.05, x: 3 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 250 }}
-        >
-          <IoChevronForward size={22} />
-        </motion.button>
+        <>
+          {/* 桌機版按鈕：左側中間，箭頭向右 */}
+          <motion.button
+            onClick={() => setIsTranscriptOpen(true)}
+            className="absolute left-1.5 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-r-lg shadow-lg cursor-pointer z-[5] hidden md:block"
+            initial={{ scale: 1, x: 0 }}
+            whileHover={{ scale: 1.05, x: 3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 250 }}
+          >
+            <IoChevronForward size={22} />
+          </motion.button>
+
+          {/* 手機版按鈕：底部中間，箭頭向上 */}
+          <motion.button
+            onClick={() => setIsTranscriptOpen(true)}
+            className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white p-2 rounded-t-lg shadow-lg cursor-pointer z-[5] md:hidden"
+            initial={{ scale: 1, y: 0 }}
+            whileHover={{ scale: 1.05, y: -3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 250 }}
+          >
+            <IoChevronForward size={22} className="rotate-[-90deg]" />
+          </motion.button>
+        </>
       )}
 
       {/* 右側 - 影片播放器 */}
       <div
-        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-10 px-6 relative ${
-          isTranscriptOpen ? "w-2/3" : "w-full sm:px-36"
+        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-5 md:py-10 px-6 relative ${
+          isTranscriptOpen ? "w-full md:w-2/3" : "w-full sm:px-36"
         }`}
       >
         <div className="w-full flex justify-center mb-4">
