@@ -1,7 +1,13 @@
 "use client";
 
-import { createContext, useState, useContext, ReactNode } from "react";
-import { TranscriptSection } from "@/types/interfaces";
+import {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+} from "react";
+import { TranscriptSection, TranscriptSegment } from "@/types/interfaces";
 
 interface TranscriptionContextType {
   videoFile: File | null;
@@ -9,11 +15,14 @@ interface TranscriptionContextType {
   audioFile: File | null;
   audioUrl: string | null;
   transcript: TranscriptSection[];
+  highlightSegments: TranscriptSegment[];
+  duration: number;
   setVideoFile: (file: File) => void;
   setVideoUrl: (url: string) => void;
   setAudioFile: (file: File) => void;
   setAudioUrl: (url: string) => void;
   setTranscript: (transcript: TranscriptSection[]) => void;
+  setDuration: (duration: number) => void;
 }
 
 const TranscriptionContext = createContext<
@@ -30,6 +39,18 @@ export const TranscriptionProvider = ({
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptSection[]>([]);
+  const [highlightSegments, setHighlightSegments] = useState<
+    TranscriptSegment[]
+  >([]);
+  const [duration, setDuration] = useState<number>(0);
+
+  useEffect(() => {
+    setHighlightSegments(
+      transcript
+        .flatMap((section) => section.segments)
+        .filter((segment) => segment.highlighted)
+    );
+  }, [transcript]);
 
   return (
     <TranscriptionContext.Provider
@@ -39,11 +60,14 @@ export const TranscriptionProvider = ({
         audioFile,
         audioUrl,
         transcript,
+        highlightSegments,
+        duration,
         setVideoFile,
         setVideoUrl,
         setAudioFile,
         setAudioUrl,
         setTranscript,
+        setDuration,
       }}
     >
       {children}

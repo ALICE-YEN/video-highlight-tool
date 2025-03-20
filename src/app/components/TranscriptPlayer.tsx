@@ -5,12 +5,16 @@ import { motion } from "framer-motion";
 import { IoClose, IoChevronForward } from "react-icons/io5";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import TranscriptSection from "@/app/components/TranscriptSection";
+import VideoModeToggle from "@/app/components/VideoModeToggle";
+import Timeline from "@/app/components/Timeline";
 
 export default function TranscriptPlayer() {
-  const { videoUrl, transcript } = useTranscription();
+  const { videoUrl, transcript, highlightSegments, duration } =
+    useTranscription();
 
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true); // 控制字幕區開關
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
+  const [isHighlightMode, setIsHighlightMode] = useState<boolean>(false); // 控制字幕區開關
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -23,6 +27,47 @@ export default function TranscriptPlayer() {
 
     return () => video.removeEventListener("timeupdate", updateCurrentTime);
   }, []);
+
+  // 自動跳過非精選片段
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || highlightSegments.length === 0 || !isHighlightMode) return;
+
+    const seekToNextSegment = () => {
+      const currentTime = video.currentTime;
+
+      // 找到目前時間在哪個區間內
+      const inSegment = highlightSegments.find(
+        (seg) => currentTime >= seg.start && currentTime < seg.end
+      );
+
+      // 如果當前時間不在任何 highlight 片段，跳到下一個可播放的區間
+      if (!inSegment) {
+        const nextSegment = highlightSegments.find(
+          (seg) => seg.start > currentTime
+        );
+        if (nextSegment) {
+          // Smooth transition between selected clips
+          video.style.transition =
+            "opacity 0.3s ease-in-out, transform 0.3s ease-in-out";
+          video.style.opacity = "0.8";
+
+          setTimeout(() => {
+            video.currentTime = nextSegment.start;
+            video.style.opacity = "1";
+          }, 250);
+        } else {
+          // 沒有更多可播放的片段時
+          video.pause();
+          video.currentTime = 0;
+        }
+      }
+    };
+
+    video.addEventListener("timeupdate", seekToNextSegment);
+
+    return () => video.removeEventListener("timeupdate", seekToNextSegment);
+  }, [isHighlightMode, highlightSegments]);
 
   const handleSeek = (time: number) => {
     if (videoRef.current) {
@@ -83,13 +128,33 @@ export default function TranscriptPlayer() {
           isTranscriptOpen ? "w-2/3" : "w-full"
         }`}
       >
+        <div className="w-full flex justify-center mb-4">
+          <VideoModeToggle
+            isHighlightMode={isHighlightMode}
+            setIsHighlightMode={setIsHighlightMode}
+          />
+        </div>
+
         {videoUrl && (
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            className="w-full max-w-2xl rounded-md shadow-lg"
-          ></video>
+          <>
+            <div className="w-full flex justify-center">
+              <div className="w-full max-w-xl">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  className="w-full rounded-md shadow-lg"
+                ></video>
+              </div>
+            </div>
+
+            <Timeline
+              highlightSegments={highlightSegments}
+              duration={duration}
+              currentTime={currentTime}
+              onSeek={handleSeek}
+            />
+          </>
         )}
       </div>
     </div>

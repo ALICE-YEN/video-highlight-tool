@@ -13,6 +13,7 @@ export default function UploadPage() {
     setAudioFile,
     setAudioUrl,
     setTranscript,
+    setDuration,
   } = useTranscription();
 
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +115,7 @@ export default function UploadPage() {
       }
 
       setTranscript(data.transcript);
+      setDuration(data.duration);
     } catch (error) {
       console.error("❌ 轉錄 API 失敗:", error);
       toast.error("轉錄 API 失敗");
@@ -144,10 +146,10 @@ export default function UploadPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <h2 className="text-xl font-bold mb-4">上傳影片</h2>
+      <h2 className="text-xl font-bold mb-6">上傳影片</h2>
 
       <div
-        className="w-8/12 min-w-72 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white"
+        className="w-8/12 min-w-80 sm:min-w-96 h-96 flex flex-col items-center justify-center rounded-lg bg-white"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -165,10 +167,10 @@ export default function UploadPage() {
             <span className="text-6xl text-gray-400">⬆</span>
           </motion.div>
           <p className="mt-8 text-gray-700">將你要上傳的影片拖曳到這裡</p>
-          <p className="mt-2 text-gray-500 text-sm text-center md:text-left">
-            上傳影片後，系統將自動添加字幕
-            <span className="hidden md:inline">，</span>
-            <br className="md:hidden" />
+          <p className="mt-2.5 text-gray-500 text-sm">
+            系統將自動添加字幕、選擇精選片段
+          </p>
+          <p className="mt-0.5 text-gray-500 text-sm">
             你可以修改字幕、預覽內容，並選擇精選片段
           </p>
         </div>

@@ -105,10 +105,7 @@ export default function TranscriptSegment({
             autoFocus
           />
         ) : (
-          <span
-            // segment.highlighted，預設沒有值，boolean 是後天加上
-            className={`${segment.highlighted === false && "text-gray-400"}`}
-          >
+          <span className={`${!segment.highlighted && "text-gray-400"}`}>
             {segment.text}
           </span>
         )}
@@ -141,14 +138,13 @@ export default function TranscriptSegment({
         }}
         className="transition cursor-pointer"
       >
-        {/* segment.highlighted，預設沒有值，boolean 是後天加上 */}
-        {segment.highlighted === false ? (
+        {segment.highlighted ? (
+          <IoStar size={20} className="text-yellow-400 hover:text-yellow-300" />
+        ) : (
           <IoStarOutline
             size={20}
             className="text-gray-400 hover:text-gray-700"
           />
-        ) : (
-          <IoStar size={20} className="text-yellow-400 hover:text-yellow-300" />
         )}
       </button>
     </div>

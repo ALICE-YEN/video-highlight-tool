@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     });
     console.log("whisperResponse", whisperResponse);
 
+    const duration = whisperResponse.duration;
     const segments = whisperResponse.segments; // 包含 start, end, text
     if (!segments) {
       // Whisper API 未返回字幕分段
@@ -43,12 +44,12 @@ export async function POST(request: Request) {
       ${transcriptText}
 
       請根據以下步驟處理：
-      1. 根據內容自動分段
-      2. 為每個段落生成合適的標題
-      3. 返回 JSON 格式，包含 "id"（段落唯一識別碼，1 開始遞增）、"title"（對應片段的主題標題，確保合理分段）與 "segments"（字幕段落）
-      4. segments 內的物件，"id"、"start"、"end" 應與原始字幕一致
-      5. 所有輸出內容為繁體中文
-      6. 嚴格遵守 JSON 格式輸出，不要添加額外的解釋、標題或註釋
+      1. 根據內容自動分段，每段須有合理標題。
+      3. 返回 JSON 格式，包含 "id"（段落唯一識別碼，1 開始遞增）、"title"（段落標題）與 "segments"（字幕段落）
+      4. segments 內的物件需包含："id"、"start"、"end"、"text"（皆與原始字幕一致）。"highlighted"（AI 判斷是否為精選內容：重要資訊、關鍵概念、總結 => true。冗長、重複、不必要的細節 => false。）
+      5. 至少確保所有 segments 中的一個物件 "highlighted": true"，不能所有字幕都是 false。
+      6. 所有輸出內容為繁體中文
+      7. 嚴格遵守 JSON 格式輸出，不要添加額外的解釋、標題或註釋
 
       返回 JSON 格式範例：
       [
@@ -56,8 +57,8 @@ export async function POST(request: Request) {
           "id": 1,
           "title": "段落標題",
           "segments": [
-            { "id": 0, "start": 0, "end": 5, "text": "第一句字幕" },
-            { "id": 1, "start": 5, "end": 10, "text": "第二句字幕" }
+            { "id": 0, "start": 0, "end": 5, "text": "第一句字幕", "highlighted": true },
+            { "id": 1, "start": 5, "end": 10, "text": "第二句字幕", "highlighted": false }
           ]
         }
       ]
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       transcript: structuredTranscript,
+      duration,
     });
   } catch (error) {
     console.error("❌ Whisper API 轉錄失敗:", error);

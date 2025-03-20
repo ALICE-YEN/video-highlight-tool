@@ -10,5 +10,5 @@ export interface TranscriptSegment {
   start: number;
   end: number;
   text: string;
-  highlighted?: boolean; // 後來自行增加
+  highlighted: boolean;
 }
