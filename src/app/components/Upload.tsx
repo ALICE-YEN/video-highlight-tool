@@ -143,7 +143,7 @@ export default function UploadPage() {
   const handleSelectFile = () => fileInputRef.current?.click();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="min-h-[100svh] flex flex-col items-center justify-center bg-gray-100">
       <h2 className="text-xl font-bold mb-6">上傳影片</h2>
 
       <div
