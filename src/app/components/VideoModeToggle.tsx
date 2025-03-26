@@ -4,11 +4,13 @@ import { motion } from "framer-motion";
 interface Props {
   isHighlightMode: boolean;
   setIsHighlightMode: (mode: boolean) => void;
+  isTranscriptionReady: boolean;
 }
 
 export default function VideoModeToggle({
   isHighlightMode,
   setIsHighlightMode,
+  isTranscriptionReady,
 }: Props) {
   const [hoveredButton, setHoveredButton] = useState<
     "original" | "highlighted" | null
@@ -16,10 +18,12 @@ export default function VideoModeToggle({
   const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
+
   const hasInitialized = useRef(false);
 
+  // 第一次渲染，直接看到 tooltip
   useEffect(() => {
-    if (hasInitialized.current) return; // 如果已執行過，則直接 return，避免後續執行
+    if (hasInitialized.current) return;
 
     hasInitialized.current = true; // 記錄已執行過，避免未來再執行
     const initialMode = isHighlightMode ? "highlighted" : "original";
@@ -33,6 +37,8 @@ export default function VideoModeToggle({
   }, [isHighlightMode]);
 
   const handleClick = (mode: "original" | "highlighted") => {
+    if (!isTranscriptionReady && mode === "highlighted") return;
+
     setIsHighlightMode(mode === "highlighted");
     setHoveredButton(mode);
 
@@ -70,8 +76,13 @@ export default function VideoModeToggle({
           onClick={() => handleClick("highlighted")}
           onMouseEnter={() => setHoveredButton("highlighted")}
           onMouseLeave={() => setHoveredButton(null)}
-          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 cursor-pointer focus:outline-none ${
+          disabled={!isTranscriptionReady}
+          className={`z-20 flex-1 text-center py-2 transition-colors duration-300 focus:outline-none ${
             isHighlightMode ? "text-white" : "text-gray-500"
+          } ${
+            !isTranscriptionReady
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer"
           }`}
         >
           精選模式

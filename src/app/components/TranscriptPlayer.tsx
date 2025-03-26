@@ -3,11 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoClose, IoChevronForward } from "react-icons/io5";
+import { toast } from "react-toastify";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import useLocalStorageState from "@/hooks/useLocalStorageState";
+import useIsMobile from "@/hooks/useIsMobile";
 import TranscriptSection from "@/app/components/TranscriptSection";
 import VideoModeToggle from "@/app/components/VideoModeToggle";
 import Timeline from "@/app/components/Timeline";
+import TranscriptSectionSkeleton from "@/app/components/TranscriptSectionSkeleton";
 import {
   SUBTITLE_FONT_SIZE_DEFAULT,
   SUBTITLE_FONT_SIZE_MIN,
@@ -15,8 +18,13 @@ import {
 } from "@/utils/constants";
 
 export default function TranscriptPlayer() {
-  const { videoUrl, transcript, highlightSegments, duration } =
-    useTranscription();
+  const {
+    videoUrl,
+    transcript,
+    highlightSegments,
+    duration,
+    isTranscriptionReady,
+  } = useTranscription();
 
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
@@ -29,8 +37,10 @@ export default function TranscriptPlayer() {
     "highlightMode",
     false
   ); // 控制字幕區開關
+  const isMobile = useIsMobile();
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const revertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -62,7 +72,6 @@ export default function TranscriptPlayer() {
   // 監聽鍵盤事件，調整字幕大小
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      console.log("event", event.key);
       if (event.key === "=" || event.key === "+") {
         // 放大字體，限制最大
         setSubtitleFontSize((prevSize) =>
@@ -80,10 +89,26 @@ export default function TranscriptPlayer() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
+  const handleNoHighlightSegments = () => {
+    toast.info("沒有任何精選片段，返回原始模式", { className: "toast-wide" });
+
+    if (revertTimeoutRef.current) clearTimeout(revertTimeoutRef.current);
+
+    revertTimeoutRef.current = setTimeout(() => {
+      setIsHighlightMode(false);
+    }, 500);
+  };
+
   // 自動跳過非精選片段
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || highlightSegments.length === 0 || !isHighlightMode) return;
+
+    if (!video || !isHighlightMode) return;
+
+    if (isTranscriptionReady && highlightSegments.length === 0) {
+      handleNoHighlightSegments();
+      return;
+    }
 
     const seekToNextSegment = () => {
       const currentTime = video.currentTime;
@@ -119,7 +144,7 @@ export default function TranscriptPlayer() {
     video.addEventListener("timeupdate", seekToNextSegment);
 
     return () => video.removeEventListener("timeupdate", seekToNextSegment);
-  }, [isHighlightMode, highlightSegments]);
+  }, [isHighlightMode, highlightSegments, isTranscriptionReady]);
 
   const handleSeek = (time: number) => {
     if (videoRef.current) {
@@ -133,9 +158,9 @@ export default function TranscriptPlayer() {
       {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
-          initial={{ y: 300, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 300, opacity: 0 }}
+          initial={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
+          animate={{ x: 0, y: 0, opacity: 1 }}
+          exit={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="w-full md:w-1/3 h-1/2 md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
         >
@@ -151,14 +176,21 @@ export default function TranscriptPlayer() {
             </button>
           </div>
 
-          {transcript.map((section) => (
-            <TranscriptSection
-              key={section.id}
-              section={section}
-              currentTime={currentTime}
-              onSeek={handleSeek}
-            />
-          ))}
+          {isTranscriptionReady ? (
+            transcript.map((section) => (
+              <TranscriptSection
+                key={section.id}
+                section={section}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+              />
+            ))
+          ) : (
+            <>
+              <TranscriptSectionSkeleton />
+              <TranscriptSectionSkeleton />
+            </>
+          )}
         </motion.div>
       ) : (
         // 當字幕區關閉時，顯示展開按鈕
@@ -196,9 +228,12 @@ export default function TranscriptPlayer() {
         }`}
       >
         <div className="w-full flex justify-center mb-4">
+          {/* 若字幕尚未處理完成，強制設定為原始模式 */}
+          {/* 等字幕處理完成，isHighlightMode 會顯示前次的設定(localstorage) */}
           <VideoModeToggle
-            isHighlightMode={isHighlightMode}
+            isHighlightMode={isTranscriptionReady ? isHighlightMode : false}
             setIsHighlightMode={setIsHighlightMode}
+            isTranscriptionReady={isTranscriptionReady}
           />
         </div>
 
@@ -224,12 +259,18 @@ export default function TranscriptPlayer() {
               </div>
             </div>
 
-            <Timeline
-              highlightSegments={highlightSegments}
-              duration={duration}
-              currentTime={currentTime}
-              onSeek={handleSeek}
-            />
+            {isTranscriptionReady ? (
+              <Timeline
+                highlightSegments={highlightSegments}
+                duration={duration}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+              />
+            ) : (
+              <div className="relative w-full mt-4">
+                <div className="relative w-full h-6 bg-gray-600 rounded-md animate-pulse" />
+              </div>
+            )}
           </>
         )}
       </div>

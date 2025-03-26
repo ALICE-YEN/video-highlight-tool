@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useState, useContext, useMemo, ReactNode } from "react";
 import type { TranscriptSection, TranscriptSegment } from "@/types/interfaces";
 
 interface TranscriptionContextType {
@@ -14,9 +8,11 @@ interface TranscriptionContextType {
   transcript: TranscriptSection[];
   highlightSegments: TranscriptSegment[];
   duration: number;
+  isTranscriptionReady: boolean;
   setVideoUrl: (url: string) => void;
   setTranscript: (transcript: TranscriptSection[]) => void;
   setDuration: (duration: number) => void;
+  setIsTranscriptionReady: (isTranscriptionReady: boolean) => void;
 }
 
 const TranscriptionContext = createContext<
@@ -30,18 +26,17 @@ export const TranscriptionProvider = ({
 }) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptSection[]>([]);
-  const [highlightSegments, setHighlightSegments] = useState<
-    TranscriptSegment[]
-  >([]);
   const [duration, setDuration] = useState<number>(0);
+  const [isTranscriptionReady, setIsTranscriptionReady] =
+    useState<boolean>(false);
 
-  useEffect(() => {
-    setHighlightSegments(
+  const highlightSegments = useMemo(
+    () =>
       transcript
         .flatMap((section) => section.segments)
-        .filter((segment) => segment.highlighted)
-    );
-  }, [transcript]);
+        .filter((segment) => segment.highlighted),
+    [transcript]
+  );
 
   return (
     <TranscriptionContext.Provider
@@ -50,9 +45,11 @@ export const TranscriptionProvider = ({
         transcript,
         highlightSegments,
         duration,
+        isTranscriptionReady,
         setVideoUrl,
         setTranscript,
         setDuration,
+        setIsTranscriptionReady,
       }}
     >
       {children}

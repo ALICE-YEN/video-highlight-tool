@@ -1,7 +1,6 @@
 export interface TranscriptSection {
   id: number;
   title: string;
-  summary: string;
   segments: TranscriptSegment[];
 }
 
