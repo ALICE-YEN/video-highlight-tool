@@ -32,7 +32,7 @@ export default function UploadPage() {
     }
 
     if (file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
-      toast.error("影片大小不可超過 15MB");
+      toast.error("影片大小不可超過 10MB");
       return;
     }
 
