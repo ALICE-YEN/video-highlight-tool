@@ -11,9 +11,9 @@ export async function extractAudio(videoFile: File): Promise<Blob | null> {
     await ffmpeg.load();
   }
 
-  ffmpeg.on("log", ({ message }) => {
-    console.log(`FFmpeg 日誌: ${message}`);
-  });
+  // ffmpeg.on("log", ({ message }) => {
+  //   console.log(`FFmpeg 日誌: ${message}`);
+  // });
 
   // 轉換成 ffmpeg 可讀的格式
   await ffmpeg.writeFile("input.mp4", await fetchFile(videoFile));

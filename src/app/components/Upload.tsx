@@ -7,6 +7,7 @@ import { useTranscription } from "@/contexts/TranscriptionContext";
 import { MAX_VIDEO_SIZE_MB } from "@/utils/constants";
 import type { TranscriptSection } from "@/types/interfaces";
 import Loading from "@/app/components/Loading";
+import { extractAudio } from "@/utils/extractAudio";
 
 type TranscriptionResponse = {
   transcript: TranscriptSection[];
@@ -59,7 +60,9 @@ export default function UploadPage() {
     file: File
   ): Promise<TranscriptionResponse> => {
     // 提取音訊
-    const audioBlob = await extractAudioAPI(file);
+    // const audioBlob = await extractAudioAPI(file);
+    const audioBlob = await extractAudio(file);
+    if (!audioBlob) throw new Error("音訊提取失敗");
 
     // 創建URL並設置給audio元素
     // const audioUrl = URL.createObjectURL(audioBlob);
@@ -68,29 +71,29 @@ export default function UploadPage() {
     return await transcribeAudioAPI(audioBlob);
   };
 
-  const extractAudioAPI = async (videoFile: File): Promise<Blob> => {
-    try {
-      const formData = new FormData();
-      formData.append("video", videoFile);
+  // const extractAudioAPI = async (videoFile: File): Promise<Blob> => {
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("video", videoFile);
 
-      const response = await fetch("/api/extract-audio", {
-        method: "POST",
-        body: formData,
-      });
+  //     const response = await fetch("/api/extract-audio", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "提取音訊發生錯誤");
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.error || "提取音訊發生錯誤");
+  //     }
 
-      // 返回音頻blob
-      return await response.blob();
-    } catch (error) {
-      console.error("提取音訊發生錯誤:", error);
-      toast.error("提取音訊發生錯誤");
-      throw error;
-    }
-  };
+  //     // 返回音頻blob
+  //     return await response.blob();
+  //   } catch (error) {
+  //     console.error("提取音訊發生錯誤:", error);
+  //     toast.error("提取音訊發生錯誤");
+  //     throw error;
+  //   }
+  // };
 
   const transcribeAudioAPI = async (
     audioBlob: Blob
