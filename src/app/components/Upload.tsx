@@ -5,23 +5,107 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import { MAX_VIDEO_SIZE_MB } from "@/utils/constants";
+import type { TranscriptSection } from "@/types/interfaces";
+import Loading from "@/app/components/Loading";
+
+const transcriptData = [
+  {
+    id: 1,
+    title: "測試講話與記錄",
+    segments: [
+      {
+        id: 0,
+        start: 0,
+        end: 2,
+        text: "再來測試講話",
+        highlighted: true,
+      },
+      {
+        id: 1,
+        start: 2,
+        end: 4,
+        text: "那這個講話多久會被記實",
+        highlighted: false,
+      },
+      {
+        id: 2,
+        start: 4,
+        end: 6,
+        text: "也很好奇",
+        highlighted: false,
+      },
+    ],
+  },
+  {
+    id: 2,
+    title: "使用Whisper的API",
+    segments: [
+      {
+        id: 3,
+        start: 6,
+        end: 8,
+        text: "要用Whisper的API",
+        highlighted: true,
+      },
+    ],
+  },
+  {
+    id: 3,
+    title: "影音剪輯與字幕自動化",
+    segments: [
+      {
+        id: 4,
+        start: 10,
+        end: 12,
+        text: "然後等一下要做的是一個影音",
+        highlighted: false,
+      },
+      {
+        id: 5,
+        start: 12,
+        end: 14,
+        text: "可以自動上字幕",
+        highlighted: true,
+      },
+      {
+        id: 6,
+        start: 14,
+        end: 16,
+        text: "然後有前段可以去做剪輯",
+        highlighted: false,
+      },
+    ],
+  },
+  {
+    id: 4,
+    title: "成本考量",
+    segments: [
+      {
+        id: 7,
+        start: 16,
+        end: 18,
+        text: "那不知道這個東西到底會花多少錢呢",
+        highlighted: true,
+      },
+    ],
+  },
+];
+
+type TranscriptionResponse = {
+  transcript: TranscriptSection[];
+  duration: number;
+};
 
 export default function UploadPage() {
-  const {
-    setVideoFile,
-    setVideoUrl,
-    setAudioFile,
-    setAudioUrl,
-    setTranscript,
-    setDuration,
-  } = useTranscription();
+  const { setVideoUrl, setTranscript, setDuration, setIsTranscriptionReady } =
+    useTranscription();
 
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = async (file: File | null) => {
+  const handleFileChange = async (file: File | null): Promise<void> => {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
@@ -34,8 +118,6 @@ export default function UploadPage() {
       return;
     }
 
-    setVideoFile(file);
-
     setIsLoading(true);
 
     // 產生本地預覽 URL
@@ -43,23 +125,37 @@ export default function UploadPage() {
     setVideoUrl(url);
 
     try {
-      // 提取音訊
-      await extractAudio(file);
+      const { transcript, duration } = await processVideoToTranscript(file);
+      setTranscript(transcript);
+      setDuration(duration);
+      toast.success("影片字幕生成成功");
+      setIsTranscriptionReady(true);
     } catch (error) {
       console.error(error);
-      alert("字幕轉錄失敗");
+      toast.error("處理影片時發生錯誤");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setIsLoading(false);
+  const processVideoToTranscript = async (
+    file: File
+  ): Promise<TranscriptionResponse> => {
+    // 提取音訊
+    const audioBlob = await extractAudioAPI(file);
+
+    // 創建URL並設置給audio元素
+    // const audioUrl = URL.createObjectURL(audioBlob);
+
+    // 發送轉錄請求
+    return await transcribeAudioAPI(audioBlob);
   };
 
   const extractAudioAPI = async (videoFile: File): Promise<Blob> => {
     try {
-      // 創建FormData對象
       const formData = new FormData();
       formData.append("video", videoFile);
 
-      // 發送請求到API Route
       const response = await fetch("/api/extract-audio", {
         method: "POST",
         body: formData,
@@ -67,38 +163,21 @@ export default function UploadPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "提取音頻失敗");
+        throw new Error(errorData.error || "提取音訊發生錯誤");
       }
 
       // 返回音頻blob
       return await response.blob();
     } catch (error) {
-      console.error("API提取音頻錯誤:", error);
-      toast.error("API提取音頻錯誤");
+      console.error("提取音訊發生錯誤:", error);
+      toast.error("提取音訊發生錯誤");
       throw error;
     }
   };
 
-  const extractAudio = async (file: File) => {
-    try {
-      const audioBlob = await extractAudioAPI(file);
-      setAudioFile(audioBlob);
-
-      // 創建URL並設置給audio元素
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setAudioUrl(audioUrl);
-
-      // 發送轉錄請求
-      transcribeAudio(audioBlob);
-
-      // 繼續處理 (例如發送到Whisper API)
-    } catch (error) {
-      console.error(error);
-      toast.error("音頻提取失敗");
-    }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
+  const transcribeAudioAPI = async (
+    audioBlob: Blob
+  ): Promise<TranscriptionResponse> => {
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob);
@@ -111,14 +190,22 @@ export default function UploadPage() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "轉錄 API 失敗");
+        throw new Error(data.error || "轉錄失敗");
       }
 
-      setTranscript(data.transcript);
-      setDuration(data.duration);
+      return {
+        transcript: data.transcript,
+        duration: data.duration,
+      };
+
+      return {
+        transcript: transcriptData,
+        duration: 20.68,
+      };
     } catch (error) {
-      console.error("❌ 轉錄 API 失敗:", error);
-      toast.error("轉錄 API 失敗");
+      console.error("音訊轉錄文字發生錯誤", error);
+      toast.error("音訊轉錄文字發生錯誤");
+      throw error;
     }
   };
 
@@ -138,11 +225,7 @@ export default function UploadPage() {
     handleFileChange(file);
   };
 
-  const handleSelectFile = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+  const handleSelectFile = () => fileInputRef.current?.click();
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
@@ -182,22 +265,7 @@ export default function UploadPage() {
         </button>
       </div>
 
-      {isLoading && (
-        <div className="fixed inset-0 bg-black/30">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 flex items-center justify-center z-50"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              className="w-12 h-12 border-6 border-gray-300 border-t-gray-500 rounded-full"
-            />
-          </motion.div>
-        </div>
-      )}
+      {isLoading && <Loading />}
 
       {/* {audioUrl && (
         <div className="p-4 bg-gray-50 rounded-lg">

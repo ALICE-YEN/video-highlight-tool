@@ -15,8 +15,13 @@ import {
 } from "@/utils/constants";
 
 export default function TranscriptPlayer() {
-  const { videoUrl, transcript, highlightSegments, duration } =
-    useTranscription();
+  const {
+    videoUrl,
+    transcript,
+    highlightSegments,
+    duration,
+    isTranscriptionReady,
+  } = useTranscription();
 
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
@@ -196,9 +201,12 @@ export default function TranscriptPlayer() {
         }`}
       >
         <div className="w-full flex justify-center mb-4">
+          {/* 若字幕尚未處理完成，強制設定為原始模式 */}
+          {/* 等字幕處理完成，isHighlightMode 會顯示前次的設定(localstorage) */}
           <VideoModeToggle
-            isHighlightMode={isHighlightMode}
+            isHighlightMode={isTranscriptionReady ? isHighlightMode : false}
             setIsHighlightMode={setIsHighlightMode}
+            isTranscriptionReady={isTranscriptionReady}
           />
         </div>
 

@@ -5,11 +5,9 @@ import { useTranscription } from "@/contexts/TranscriptionContext";
 import TranscriptPlayer from "@/app/components/TranscriptPlayer";
 
 export default function Home() {
-  const { videoUrl, transcript } = useTranscription();
+  const { videoUrl, transcript, isTranscriptionReady } = useTranscription();
+  console.log("transcript", transcript);
+  console.log("isTranscriptionReady", isTranscriptionReady);
 
-  return (
-    <div>
-      {videoUrl && transcript?.length > 0 ? <TranscriptPlayer /> : <Upload />}
-    </div>
-  );
+  return <div>{videoUrl ? <TranscriptPlayer /> : <Upload />}</div>;
 }

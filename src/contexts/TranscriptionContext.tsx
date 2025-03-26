@@ -14,9 +14,11 @@ interface TranscriptionContextType {
   transcript: TranscriptSection[];
   highlightSegments: TranscriptSegment[];
   duration: number;
+  isTranscriptionReady: boolean;
   setVideoUrl: (url: string) => void;
   setTranscript: (transcript: TranscriptSection[]) => void;
   setDuration: (duration: number) => void;
+  setIsTranscriptionReady: (isTranscriptionReady: boolean) => void;
 }
 
 const TranscriptionContext = createContext<
@@ -34,6 +36,8 @@ export const TranscriptionProvider = ({
     TranscriptSegment[]
   >([]);
   const [duration, setDuration] = useState<number>(0);
+  const [isTranscriptionReady, setIsTranscriptionReady] =
+    useState<boolean>(false);
 
   useEffect(() => {
     setHighlightSegments(
@@ -50,9 +54,11 @@ export const TranscriptionProvider = ({
         transcript,
         highlightSegments,
         duration,
+        isTranscriptionReady,
         setVideoUrl,
         setTranscript,
         setDuration,
+        setIsTranscriptionReady,
       }}
     >
       {children}

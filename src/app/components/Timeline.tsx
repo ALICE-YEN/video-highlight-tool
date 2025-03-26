@@ -37,10 +37,12 @@ export default function Timeline({
   }, []);
 
   // 根據 numTicks 生成時間刻度
-  const stepSize = Math.round(duration / numTicks);
-  const ticks = [];
-  for (let i = 0; i <= duration; i += stepSize) {
-    ticks.push(i);
+  const stepSize = Math.max(1, Math.round(duration / numTicks));
+  const ticks: number[] = [];
+  if (duration > 0) {
+    for (let i = 0; i <= duration; i += stepSize) {
+      ticks.push(i);
+    }
   }
 
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
