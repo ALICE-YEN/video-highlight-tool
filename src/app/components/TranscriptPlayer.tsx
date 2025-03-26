@@ -6,6 +6,7 @@ import { IoClose, IoChevronForward } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import useLocalStorageState from "@/hooks/useLocalStorageState";
+import useIsMobile from "@/hooks/useIsMobile";
 import TranscriptSection from "@/app/components/TranscriptSection";
 import VideoModeToggle from "@/app/components/VideoModeToggle";
 import Timeline from "@/app/components/Timeline";
@@ -36,6 +37,7 @@ export default function TranscriptPlayer() {
     "highlightMode",
     false
   ); // 控制字幕區開關
+  const isMobile = useIsMobile();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const revertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -156,9 +158,9 @@ export default function TranscriptPlayer() {
       {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
-          initial={{ y: 300, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 300, opacity: 0 }}
+          initial={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
+          animate={{ x: 0, y: 0, opacity: 1 }}
+          exit={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
           transition={{ duration: 0.3 }}
           className="w-full md:w-1/3 h-1/2 md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
         >
