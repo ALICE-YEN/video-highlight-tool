@@ -54,7 +54,7 @@ export default function TranscriptSegment({
 
   const updateSegmentText = (segmentId: number, newText: string) => {
     setTranscript((prev) =>
-      prev.map((section: TranscriptSection) => ({
+      prev.map((section) => ({
         ...section,
         segments: section.segments.map((segment) =>
           segment.id !== segmentId ? segment : { ...segment, text: newText }
@@ -77,7 +77,7 @@ export default function TranscriptSegment({
 
   const toggleHighlight = (segmentId: number) => {
     setTranscript((prev) =>
-      prev.map((section: TranscriptSection) => ({
+      prev.map((section) => ({
         ...section,
         segments: section.segments.map((segment) =>
           segment.id !== segmentId

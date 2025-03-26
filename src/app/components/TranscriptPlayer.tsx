@@ -144,7 +144,12 @@ export default function TranscriptPlayer() {
     video.addEventListener("timeupdate", seekToNextSegment);
 
     return () => video.removeEventListener("timeupdate", seekToNextSegment);
-  }, [isHighlightMode, highlightSegments, isTranscriptionReady]);
+  }, [
+    isHighlightMode,
+    highlightSegments,
+    isTranscriptionReady,
+    handleNoHighlightSegments,
+  ]);
 
   const handleSeek = (time: number) => {
     if (videoRef.current) {

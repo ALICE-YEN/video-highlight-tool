@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useState, useContext, useMemo, ReactNode } from "react";
+import {
+  createContext,
+  useState,
+  useContext,
+  useMemo,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import type { TranscriptSection, TranscriptSegment } from "@/types/interfaces";
 
 interface TranscriptionContextType {
@@ -9,10 +17,10 @@ interface TranscriptionContextType {
   highlightSegments: TranscriptSegment[];
   duration: number;
   isTranscriptionReady: boolean;
-  setVideoUrl: (url: string) => void;
-  setTranscript: (transcript: TranscriptSection[]) => void;
-  setDuration: (duration: number) => void;
-  setIsTranscriptionReady: (isTranscriptionReady: boolean) => void;
+  setVideoUrl: Dispatch<SetStateAction<string | null>>;
+  setTranscript: Dispatch<SetStateAction<TranscriptSection[]>>;
+  setDuration: Dispatch<SetStateAction<number>>;
+  setIsTranscriptionReady: Dispatch<SetStateAction<boolean>>;
 }
 
 const TranscriptionContext = createContext<
