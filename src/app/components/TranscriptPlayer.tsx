@@ -247,6 +247,7 @@ export default function TranscriptPlayer() {
                   ref={videoRef}
                   src={videoUrl}
                   controls
+                  playsInline // 防止影片在 iOS 裝置上自動進入全螢幕
                   className="w-full rounded-md shadow-lg focus:outline-none"
                 ></video>
 
