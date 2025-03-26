@@ -70,9 +70,16 @@ export async function POST(request: Request) {
       temperature: 0.1, // 讓輸出更準確，避免亂講
     });
 
-    const structuredTranscript = JSON.parse(
-      gptResponse.choices[0].message.content.trim()
-    );
+    const content = gptResponse.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return NextResponse.json(
+        { success: false, error: "GPT 回傳內容為空或格式錯誤" },
+        { status: 500 }
+      );
+    }
+
+    const structuredTranscript = JSON.parse(content.trim());
 
     console.log("✅ 轉錄成功:", structuredTranscript);
 
@@ -83,8 +90,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("❌ Whisper API 轉錄失敗:", error);
+    const err = error as Error;
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: err.message },
       { status: 500 }
     );
   }

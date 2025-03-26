@@ -41,5 +41,6 @@ export async function extractAudio(videoFile: File): Promise<Blob | null> {
     return new Blob([audioData], { type: "audio/wav" });
   } catch (error) {
     console.error("❌ 無法讀取 output.wav，可能未成功寫入", error);
+    return null;
   }
 }
