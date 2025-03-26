@@ -12,7 +12,8 @@ import VideoModeToggle from "@/app/components/VideoModeToggle";
 import Timeline from "@/app/components/Timeline";
 import TranscriptSectionSkeleton from "@/app/components/TranscriptSectionSkeleton";
 import {
-  SUBTITLE_FONT_SIZE_DEFAULT,
+  SUBTITLE_FONT_SIZE_DEFAULT_MOBILE,
+  SUBTITLE_FONT_SIZE_DEFAULT_COMPUTER,
   SUBTITLE_FONT_SIZE_MIN,
   SUBTITLE_FONT_SIZE_MAX,
 } from "@/utils/constants";
@@ -30,7 +31,7 @@ export default function TranscriptPlayer() {
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(true); // 控制字幕區開關
   const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
   const [subtitleFontSize, setSubtitleFontSize] = useState<number>(
-    SUBTITLE_FONT_SIZE_DEFAULT
+    SUBTITLE_FONT_SIZE_DEFAULT_COMPUTER
   );
 
   const [isHighlightMode, setIsHighlightMode] = useLocalStorageState<boolean>(
@@ -41,6 +42,14 @@ export default function TranscriptPlayer() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const revertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setSubtitleFontSize(
+      isMobile
+        ? SUBTITLE_FONT_SIZE_DEFAULT_MOBILE
+        : SUBTITLE_FONT_SIZE_DEFAULT_COMPUTER
+    );
+  }, [isMobile]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -156,7 +165,7 @@ export default function TranscriptPlayer() {
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row w-full h-screen bg-gray-900 relative">
+    <div className="flex flex-col-reverse md:flex-row w-full min-h-[100svh] md:h-screen bg-gray-900 relative">
       {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
@@ -164,7 +173,7 @@ export default function TranscriptPlayer() {
           animate={{ x: 0, y: 0, opacity: 1 }}
           exit={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-full md:w-1/3 h-1/2 md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto relative cursor-default"
+          className="w-full md:w-1/3 h-[50svh] md:h-auto bg-white shadow-lg py-8 px-6 overflow-y-auto md:overflow-visible relative cursor-default"
         >
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-base md:text-lg font-bold">字幕列表</h2>
@@ -225,7 +234,7 @@ export default function TranscriptPlayer() {
 
       {/* 右側 - 影片播放器 */}
       <div
-        className={`flex flex-col justify-center items-center flex-grow transition-all duration-300 py-5 md:py-10 px-6 relative ${
+        className={`h-[50svh] md:h-auto flex flex-col justify-center items-center flex-grow transition-all duration-300 py-5 md:py-10 px-6 ${
           isTranscriptOpen ? "w-full md:w-2/3" : "w-full sm:px-36"
         }`}
       >
@@ -247,7 +256,10 @@ export default function TranscriptPlayer() {
                   ref={videoRef}
                   src={videoUrl}
                   controls
-                  className="w-full rounded-md shadow-lg focus:outline-none"
+                  playsInline // 防止影片在 iOS 裝置上自動進入全螢幕
+                  className={`w-full rounded-md shadow-lg focus:outline-none ${
+                    isTranscriptOpen ? "max-h-[30svh]" : "max-h-[65svh]"
+                  } md:max-h-full`}
                 ></video>
 
                 {currentSubtitle && (
