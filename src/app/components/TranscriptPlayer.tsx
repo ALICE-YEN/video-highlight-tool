@@ -89,16 +89,6 @@ export default function TranscriptPlayer() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
-  const handleNoHighlightSegments = () => {
-    toast.info("沒有任何精選片段，返回原始模式", { className: "toast-wide" });
-
-    if (revertTimeoutRef.current) clearTimeout(revertTimeoutRef.current);
-
-    revertTimeoutRef.current = setTimeout(() => {
-      setIsHighlightMode(false);
-    }, 500);
-  };
-
   // 自動跳過非精選片段
   useEffect(() => {
     const video = videoRef.current;
@@ -106,7 +96,14 @@ export default function TranscriptPlayer() {
     if (!video || !isHighlightMode) return;
 
     if (isTranscriptionReady && highlightSegments.length === 0) {
-      handleNoHighlightSegments();
+      toast.info("沒有任何精選片段，返回原始模式", { className: "toast-wide" });
+
+      if (revertTimeoutRef.current) clearTimeout(revertTimeoutRef.current);
+
+      revertTimeoutRef.current = setTimeout(() => {
+        setIsHighlightMode(false);
+      }, 500);
+
       return;
     }
 
@@ -148,7 +145,7 @@ export default function TranscriptPlayer() {
     isHighlightMode,
     highlightSegments,
     isTranscriptionReady,
-    handleNoHighlightSegments,
+    setIsHighlightMode,
   ]);
 
   const handleSeek = (time: number) => {
