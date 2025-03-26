@@ -60,9 +60,9 @@ export default function UploadPage() {
     file: File
   ): Promise<TranscriptionResponse> => {
     // 提取音訊
-    // const audioBlob = await extractAudioAPI(file);
     const audioBlob = await extractAudio(file);
     if (!audioBlob) throw new Error("音訊提取失敗");
+    // const audioBlob = await extractAudioAPI(file); // Vercel 的 Serverless 限制，影片太大，超出單次 request 大小限制
 
     // 創建URL並設置給audio元素
     // const audioUrl = URL.createObjectURL(audioBlob);
