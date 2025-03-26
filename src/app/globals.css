@@ -11,6 +11,10 @@
   --toastify-toast-min-height: 54px;
 }
 
+.toast-wide {
+  --toastify-toast-width: 325px;
+}
+
 /* react-toastify */
 .Toastify__close-button {
   top: 50%;

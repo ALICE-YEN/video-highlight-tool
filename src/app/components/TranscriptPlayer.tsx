@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoClose, IoChevronForward } from "react-icons/io5";
+import { toast } from "react-toastify";
 import { useTranscription } from "@/contexts/TranscriptionContext";
 import useLocalStorageState from "@/hooks/useLocalStorageState";
 import TranscriptSection from "@/app/components/TranscriptSection";
@@ -37,6 +38,7 @@ export default function TranscriptPlayer() {
   ); // 控制字幕區開關
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const revertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -68,7 +70,6 @@ export default function TranscriptPlayer() {
   // 監聽鍵盤事件，調整字幕大小
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      console.log("event", event.key);
       if (event.key === "=" || event.key === "+") {
         // 放大字體，限制最大
         setSubtitleFontSize((prevSize) =>
@@ -86,10 +87,26 @@ export default function TranscriptPlayer() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
 
+  const handleNoHighlightSegments = () => {
+    toast.info("沒有任何精選片段，返回原始模式", { className: "toast-wide" });
+
+    if (revertTimeoutRef.current) clearTimeout(revertTimeoutRef.current);
+
+    revertTimeoutRef.current = setTimeout(() => {
+      setIsHighlightMode(false);
+    }, 500);
+  };
+
   // 自動跳過非精選片段
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || highlightSegments.length === 0 || !isHighlightMode) return;
+
+    if (!video || !isHighlightMode) return;
+
+    if (isTranscriptionReady && highlightSegments.length === 0) {
+      handleNoHighlightSegments();
+      return;
+    }
 
     const seekToNextSegment = () => {
       const currentTime = video.currentTime;
@@ -125,7 +142,7 @@ export default function TranscriptPlayer() {
     video.addEventListener("timeupdate", seekToNextSegment);
 
     return () => video.removeEventListener("timeupdate", seekToNextSegment);
-  }, [isHighlightMode, highlightSegments]);
+  }, [isHighlightMode, highlightSegments, isTranscriptionReady]);
 
   const handleSeek = (time: number) => {
     if (videoRef.current) {
