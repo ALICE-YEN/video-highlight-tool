@@ -8,6 +8,7 @@ import useLocalStorageState from "@/hooks/useLocalStorageState";
 import TranscriptSection from "@/app/components/TranscriptSection";
 import VideoModeToggle from "@/app/components/VideoModeToggle";
 import Timeline from "@/app/components/Timeline";
+import TranscriptSectionSkeleton from "@/app/components/TranscriptSectionSkeleton";
 import {
   SUBTITLE_FONT_SIZE_DEFAULT,
   SUBTITLE_FONT_SIZE_MIN,
@@ -156,14 +157,21 @@ export default function TranscriptPlayer() {
             </button>
           </div>
 
-          {transcript.map((section) => (
-            <TranscriptSection
-              key={section.id}
-              section={section}
-              currentTime={currentTime}
-              onSeek={handleSeek}
-            />
-          ))}
+          {isTranscriptionReady ? (
+            transcript.map((section) => (
+              <TranscriptSection
+                key={section.id}
+                section={section}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+              />
+            ))
+          ) : (
+            <>
+              <TranscriptSectionSkeleton />
+              <TranscriptSectionSkeleton />
+            </>
+          )}
         </motion.div>
       ) : (
         // 當字幕區關閉時，顯示展開按鈕
@@ -232,12 +240,18 @@ export default function TranscriptPlayer() {
               </div>
             </div>
 
-            <Timeline
-              highlightSegments={highlightSegments}
-              duration={duration}
-              currentTime={currentTime}
-              onSeek={handleSeek}
-            />
+            {isTranscriptionReady ? (
+              <Timeline
+                highlightSegments={highlightSegments}
+                duration={duration}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+              />
+            ) : (
+              <div className="relative w-full mt-4">
+                <div className="relative w-full h-6 bg-gray-600 rounded-md animate-pulse" />
+              </div>
+            )}
           </>
         )}
       </div>

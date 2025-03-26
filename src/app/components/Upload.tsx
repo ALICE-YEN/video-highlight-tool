@@ -8,89 +8,6 @@ import { MAX_VIDEO_SIZE_MB } from "@/utils/constants";
 import type { TranscriptSection } from "@/types/interfaces";
 import Loading from "@/app/components/Loading";
 
-const transcriptData = [
-  {
-    id: 1,
-    title: "測試講話與記錄",
-    segments: [
-      {
-        id: 0,
-        start: 0,
-        end: 2,
-        text: "再來測試講話",
-        highlighted: true,
-      },
-      {
-        id: 1,
-        start: 2,
-        end: 4,
-        text: "那這個講話多久會被記實",
-        highlighted: false,
-      },
-      {
-        id: 2,
-        start: 4,
-        end: 6,
-        text: "也很好奇",
-        highlighted: false,
-      },
-    ],
-  },
-  {
-    id: 2,
-    title: "使用Whisper的API",
-    segments: [
-      {
-        id: 3,
-        start: 6,
-        end: 8,
-        text: "要用Whisper的API",
-        highlighted: true,
-      },
-    ],
-  },
-  {
-    id: 3,
-    title: "影音剪輯與字幕自動化",
-    segments: [
-      {
-        id: 4,
-        start: 10,
-        end: 12,
-        text: "然後等一下要做的是一個影音",
-        highlighted: false,
-      },
-      {
-        id: 5,
-        start: 12,
-        end: 14,
-        text: "可以自動上字幕",
-        highlighted: true,
-      },
-      {
-        id: 6,
-        start: 14,
-        end: 16,
-        text: "然後有前段可以去做剪輯",
-        highlighted: false,
-      },
-    ],
-  },
-  {
-    id: 4,
-    title: "成本考量",
-    segments: [
-      {
-        id: 7,
-        start: 16,
-        end: 18,
-        text: "那不知道這個東西到底會花多少錢呢",
-        highlighted: true,
-      },
-    ],
-  },
-];
-
 type TranscriptionResponse = {
   transcript: TranscriptSection[];
   duration: number;
@@ -114,7 +31,7 @@ export default function UploadPage() {
     }
 
     if (file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
-      toast.error("影片大小不可超過 20MB");
+      toast.error("影片大小不可超過 15MB");
       return;
     }
 
@@ -126,9 +43,9 @@ export default function UploadPage() {
 
     try {
       const { transcript, duration } = await processVideoToTranscript(file);
+      toast.success("影片字幕生成成功");
       setTranscript(transcript);
       setDuration(duration);
-      toast.success("影片字幕生成成功");
       setIsTranscriptionReady(true);
     } catch (error) {
       console.error(error);
@@ -196,11 +113,6 @@ export default function UploadPage() {
       return {
         transcript: data.transcript,
         duration: data.duration,
-      };
-
-      return {
-        transcript: transcriptData,
-        duration: 20.68,
       };
     } catch (error) {
       console.error("音訊轉錄文字發生錯誤", error);
