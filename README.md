@@ -3,6 +3,8 @@
 This project is a **Next.js-based video highlight editing tool**. It allows users to **upload a video**, automatically **generate transcripts**, and **select highlight segments** for a summarized playback.
 
 **Live Demo**: [Your Deployed URL]  
+<img width="550" alt="image" src="https://github.com/user-attachments/assets/4d2ddfec-6960-43d2-bad0-135c3882bd27" />
+
 
 
 ## 🛠️ Tech Stack
