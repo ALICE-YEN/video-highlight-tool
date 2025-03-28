@@ -81,20 +81,14 @@ pnpm dev
 ![image](https://github.com/user-attachments/assets/3c6e9051-580e-4336-b825-a7d3baed7a33)
 
 
-
 ## ⚖️ Technical Choices  
 
-### 🎞️ FFmpeg Processing Options  
+### 🎞️ FFmpeg Audio Extraction Options  
 
-| Option | Evaluation | Pros | Cons | Constraints (Cost, Deployment, etc.) | Final Choice |
+| Option | Evaluation | Pros | Cons | Constraints | Final Choice |
 |--------|------------|------|------|------------------------------------|--------------|
-| **Standalone Backend** | Run FFmpeg on a dedicated backend server (e.g., AWS Lambda, GCP, or a dedicated server) | ✅ High performance for large videos <br> ✅ Can handle multiple concurrent requests | ❌ Requires backend server maintenance <br> ❌ Higher cost for dedicated resources | Higher server costs, but scalable | ❌ Not chosen |
-| **FFmpeg on Next.js Backend (FFmpeg on Node.js)** | Utilize Next.js API routes with `fluent-ffmpeg` to process video/audio | ✅ Simplifies deployment using Vercel functions <br> ✅ Lower cost than a dedicated backend <br> ✅ Easier to integrate with the app | ❌ Limited performance for large files <br> ❌ Could hit memory limits on serverless environments | Works well within Vercel’s serverless limits for audio extraction | ✅ **Chosen** |
-| **FFmpeg in Browser (WASM-based FFmpeg)** | Process video/audio in the browser using `ffmpeg.wasm` | ✅ No backend infrastructure needed <br> ✅ Lower server costs <br> ✅ Fully client-side execution | ❌ Poor performance for large files <br> ❌ High CPU usage on client devices | Limited by user’s device performance | ❌ Not chosen |
-
-**Final Decision:**  
-📌 **FFmpeg on Next.js Backend (FFmpeg on Node.js)** was chosen because it **strikes a balance between cost-efficiency and ease of deployment** while working well within **Vercel’s serverless function constraints** for **audio extraction**.
-
+| **FFmpeg on Next.js API routes** | Use `fluent-ffmpeg` in serverless functions | ✅ Simple integration with API routes | ❌ Vercel serverless functions **can't handle large file uploads** <br> ❌ Crashes due to request size and memory limits | Vercel serverless function size/memory too limited | ❌ Not chosen |
+| **FFmpeg in Browser (WASM-based)** | Use `ffmpeg.wasm` to process video in the browser | ✅ No backend needed <br> ✅ Avoids Vercel's limits <br> ✅ Zero server cost | ❌ High CPU usage on client <br> ❌ Limited by user device performance | Acceptable for small files in learning scenarios | ✅ **Chosen** |
 
 
 ### 🗣️ Whisper Speech-to-Text Options  
