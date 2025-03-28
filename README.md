@@ -87,8 +87,8 @@ pnpm dev
 
 | Option | Evaluation | Pros | Cons | Constraints | Final Choice |
 |--------|------------|------|------|------------------------------------|--------------|
-| **FFmpeg on Next.js API routes** | Use `fluent-ffmpeg` in serverless functions | ✅ Simple integration with API routes | ❌ Vercel serverless functions **can't handle large file uploads** <br> ❌ Crashes due to request size and memory limits | Vercel serverless function size/memory too limited | ❌ Not chosen |
-| **FFmpeg in Browser (WASM-based)** | Use `ffmpeg.wasm` to process video in the browser | ✅ No backend needed <br> ✅ Avoids Vercel's limits <br> ✅ Zero server cost | ❌ High CPU usage on client <br> ❌ Limited by user device performance | Acceptable for small files in learning scenarios | ✅ **Chosen** |
+| **FFmpeg on Next.js API routes** | Use `fluent-ffmpeg` in serverless functions | ✅ Simple integration with API routes |  ❌ Crashes on video uploads— **exceeds Vercel’s request size and memory limits**| Vercel serverless function size/memory too limited | ❌ Not chosen |
+| **FFmpeg in Browser (WASM-based)** | Use `ffmpeg.wasm` to process video in the browser | ✅ No backend needed <br> ✅ Avoids Vercel's limits | ❌ High CPU usage on client <br> ❌ Limited by user device performance | Acceptable for small files in learning scenarios | ✅ **Chosen** |
 
 
 ### 🗣️ Whisper Speech-to-Text Options  
