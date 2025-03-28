@@ -10,8 +10,10 @@ This project is a **Next.js-based video highlight editing tool**. It allows user
 
 
 **Live Demo**: [Your Deployed URL]  
-<img width="550" alt="image" src="https://github.com/user-attachments/assets/4d2ddfec-6960-43d2-bad0-135c3882bd27" />
-
+<a href="https://www.youtube.com/watch?v=Yu3DeyiUVV0" target="_blank">
+  <img width="550" alt="Video Highlight Tool" src="https://github.com/user-attachments/assets/4d2ddfec-6960-43d2-bad0-135c3882bd27" />
+</a>
+記得改連結
 
 
 ## 🛠️ Tech Stack
