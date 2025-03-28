@@ -62,16 +62,20 @@ export default function Timeline({
         onClick={handleTimelineClick} // 讓整個 timeline 都可以點擊
       >
         {/* 高亮區間 */}
-        {highlightSegments.map((segment, index) => (
-          <div
-            key={index}
-            className="absolute h-4 bg-yellow-400"
-            style={{
-              left: `${(segment.start / duration) * 100}%`,
-              width: `${((segment.end - segment.start) / duration) * 100}%`,
-            }}
-          />
-        ))}
+        {highlightSegments.map((segment, index) => {
+          const start = Math.max(0, Math.min(segment.start, duration));
+          const end = Math.max(start, Math.min(segment.end, duration)); // 確保 end >= start 且 <= duration，Whisper 有時會輸出超出影片實際長度的 end
+          return (
+            <div
+              key={index}
+              className="absolute h-4 bg-yellow-400"
+              style={{
+                left: `${(start / duration) * 100}%`,
+                width: `${((end - start) / duration) * 100}%`,
+              }}
+            />
+          );
+        })}
 
         {/* 當前播放位置（紅色線） */}
         <div
