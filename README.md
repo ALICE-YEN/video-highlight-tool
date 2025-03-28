@@ -85,19 +85,18 @@ pnpm dev
 
 ### 🎞️ FFmpeg Audio Extraction Options  
 
-| Option | Evaluation | Pros | Cons | Constraints | Final Choice |
+| Option | Approach | Pros | Cons | Constraints | Final Choice |
 |--------|------------|------|------|------------------------------------|--------------|
 | **FFmpeg on Next.js API routes** | Use `fluent-ffmpeg` in serverless functions | ✅ Simple integration with API routes |  ❌ Crashes on video uploads— **exceeds Vercel’s request size and memory limits**| Vercel serverless function size/memory too limited | ❌ Not chosen |
 | **FFmpeg in Browser (WASM-based)** | Use `ffmpeg.wasm` to process video in the browser | ✅ No backend needed <br> ✅ Avoids Vercel's limits | ❌ High CPU usage on client <br> ❌ Limited by user device performance | Acceptable for small files in learning scenarios | ✅ **Chosen** |
 
 
-### 🗣️ Whisper Speech-to-Text Options  
+### 🗣️ Whisper Audio-to-Subtitle Options  
 
-| Option | Evaluation | Pros | Cons | Constraints (Cost, Deployment, etc.) | Final Choice |
-|--------|------------|------|------|------------------------------------|--------------|
-| **@xenova/whisper in Browser** | Runs Whisper speech-to-text **entirely in the frontend** using WebAssembly (WASM) | ✅ No backend cost <br> ✅ Runs offline <br> ✅ No API latency | ❌ High CPU/RAM usage <br> ❌ Poor performance on mobile devices <br> ❌ Large model downloads (~100MB+) | Requires powerful client devices to work efficiently | ❌ Not chosen |
-| **@xenova/whisper on Backend (Node.js)** | Runs Whisper **on Next.js API routes** using Node.js | ✅ No OpenAI API cost <br> ✅ Runs within our own backend <br> ✅ No request limits | ❌ Slower inference compared to OpenAI API <br> ❌ High resource usage for large files | Requires dedicated compute resources | ❌ Not chosen |
-| **OpenAI Whisper API** | Uses OpenAI’s hosted Whisper API for speech-to-text conversion | ✅ Fast inference times <br> ✅ No resource constraints <br> ✅ No model management required | ❌ API cost per request <br> ❌ Requires external API call (latency) | Pay-per-use pricing, but low effort to maintain | ✅ **Chosen** |
+| Option | Approach | Pros | Cons | Final Choice |
+|--------|--------------|------|------|--------------|
+| **@xenova/whisper in Browser** | Use `@xenova/whisper` in the browser via WebAssembly | ✅ No backend needed <br> ✅ Works offline | ❌ High CPU and memory usage <br> ❌ Poor performance on mobile <br> ❌ Whisper model (~100MB+) must be downloaded in browser before use | ❌ Not chosen |
+| **@xenova/whisper on Next.js API routes** | Use `@xenova/whisper` in serverless functions | ✅ No OpenAI usage cost <br> ✅ Full control over model version and execution | ❌ Cannot run on Vercel serverless: <br> • Requires 2–5GB RAM; Vercel max is 1024MB <br> • Transcription may take 30–60s; Vercel limit is 30s <br> • Whisper model is ~100MB+; no persistent storage (must reload every time)  | ❌ Not chosen |
+| **OpenAI Whisper API** | Uses OpenAI’s hosted Whisper service | ✅ Fast and reliable <br> ✅ No infrastructure limitations <br> ✅ Easy to implement | ❌ Pay-per-request | ✅ **Chosen** |
 
-**Final Decision:**  
-📌 **OpenAI Whisper API** was chosen because it provides **fast, reliable speech-to-text processing** without the need to manage our own machine learning models or dedicate resources to **hosting** a Whisper instance.
+
