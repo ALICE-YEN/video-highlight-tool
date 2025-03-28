@@ -283,8 +283,10 @@ export default function TranscriptPlayer() {
                 />
               </div>
             ) : (
-              <div className="relative w-full mt-4">
-                <div className="relative w-full h-6 bg-gray-600 rounded-md animate-pulse" />
+              <div className="w-full max-w-xl transition-all duration-300">
+                <div className="relative w-full mt-4">
+                  <div className="relative w-full h-6 bg-gray-600 rounded-md animate-pulse" />
+                </div>
               </div>
             )}
           </>
