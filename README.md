@@ -9,7 +9,7 @@ This project is a **Next.js-based video highlight editing tool**. It allows user
 > • The **maximum video file size is limited to 10MB** when importing.
 
 
-**Live Demo**: [[Video Highlight Tool](https://video-highlight-tool-teal.vercel.app/)]  
+**Live Demo**: [Video Highlight Tool](https://video-highlight-tool-teal.vercel.app/)  
 <a href="https://video-highlight-tool-teal.vercel.app" target="_blank">
   <img width="550" alt="Video Highlight Tool" src="https://github.com/user-attachments/assets/4d2ddfec-6960-43d2-bad0-135c3882bd27" />
 </a>
