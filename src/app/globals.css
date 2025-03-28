@@ -11,15 +11,17 @@
   --toastify-toast-min-height: 54px;
 }
 
-.toast-wide {
-  --toastify-toast-width: 325px;
-}
-
 /* react-toastify */
 .Toastify__close-button {
   top: 50%;
   right: 14px;
   transform: translateY(-50%);
+}
+.toast-wide {
+  --toastify-toast-width: 325px;
+}
+.Toastify__toast {
+  border-radius: 6px;
 }
 
 @theme inline {
