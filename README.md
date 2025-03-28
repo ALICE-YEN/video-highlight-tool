@@ -2,6 +2,13 @@
 
 This project is a **Next.js-based video highlight editing tool**. It allows users to **upload a video**, automatically **generate transcripts**, and **select highlight segments** for a summarized playback.
 
+> ⚠️ **Note**: This project is mainly for **learning purposes**. Therefore:
+> 
+> • There is **no independently deployed backend** — this simplifies the architecture and limits certain technical options.  
+> • The tool is **not intended for handling large video files**, primarily due to the lack of a dedicated backend, Vercel platform limits, and cost considerations when using services like OpenAI.  
+> • The **maximum video file size is limited to 10MB** when importing.
+
+
 **Live Demo**: [Your Deployed URL]  
 <img width="550" alt="image" src="https://github.com/user-attachments/assets/4d2ddfec-6960-43d2-bad0-135c3882bd27" />
 
