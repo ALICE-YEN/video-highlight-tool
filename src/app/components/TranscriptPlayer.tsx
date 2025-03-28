@@ -169,7 +169,7 @@ export default function TranscriptPlayer() {
       {/* 左側 - 字幕區域 */}
       {isTranscriptOpen ? (
         <motion.div
-          initial={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
+          initial={{ opacity: 0 }}
           animate={{ x: 0, y: 0, opacity: 1 }}
           exit={isMobile ? { y: 300, opacity: 0 } : { x: -300, opacity: 0 }}
           transition={{ duration: 0.3 }}
@@ -274,12 +274,14 @@ export default function TranscriptPlayer() {
             </div>
 
             {isTranscriptionReady ? (
-              <Timeline
-                highlightSegments={highlightSegments}
-                duration={duration}
-                currentTime={currentTime}
-                onSeek={handleSeek}
-              />
+              <div className="w-full max-w-xl transition-all duration-300">
+                <Timeline
+                  highlightSegments={highlightSegments}
+                  duration={duration}
+                  currentTime={currentTime}
+                  onSeek={handleSeek}
+                />
+              </div>
             ) : (
               <div className="relative w-full mt-4">
                 <div className="relative w-full h-6 bg-gray-600 rounded-md animate-pulse" />
